@@ -1,0 +1,45 @@
+spring:
+  application:
+    name: execution-service
+
+execution:
+  aws:
+    regiao: ${AWS_REGION:us-east-1}
+    # Só em desenvolvimento (LocalStack). Na AWS fica vazio e vale o endpoint oficial.
+    endpoint: ${AWS_ENDPOINT_URL:}
+  dynamo:
+    # Prefixo dos nomes das tabelas (execution_estoque, execution_execucao, ...)
+    prefixo: ${DYNAMO_PREFIXO:execution_}
+    # Local: o serviço cria as tabelas que faltam. Na AWS o Terraform cria e isto fica "false".
+    criar-tabelas: ${DYNAMO_CRIAR_TABELAS:true}
+  mensageria:
+    habilitada: ${MENSAGERIA_HABILITADA:true}
+    regiao: ${AWS_REGION:us-east-1}
+    endpoint: ${AWS_ENDPOINT_URL:}
+    fila-comandos: ${EXECUTION_COMMANDS_QUEUE:execution-commands}
+    topico-eventos-arn: ${EVENTS_TOPIC_ARN:arn:aws:sns:us-east-1:000000000000:oficina-saga-events}
+    intervalo-relay-ms: 1000
+    lote-relay: 50
+
+server:
+  port: ${PORT:8083}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+oficina:
+  seguranca:
+    # VALOR DE DESENVOLVIMENTO. Em produção (Kubernetes) vem de Secret. Precisa ser o mesmo do OS Service,
+    # que emite os tokens.
+    jwt-secret: ${JWT_SECRET:dev-only-troque-este-segredo-com-32-bytes-ou-mais}
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html

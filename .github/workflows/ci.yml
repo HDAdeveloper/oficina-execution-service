@@ -1,0 +1,145 @@
+name: CI/CD — execution-service
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  id-token: write   # necessário para autenticar na AWS por OIDC (job de deploy)
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ------------------------------------------------------------------
+  # 1) Compila, roda os testes (com LocalStack em contêiner), exige 80% de
+  #    cobertura e envia a análise ao SonarQube Cloud (se configurado).
+  # ------------------------------------------------------------------
+  build-test:
+    runs-on: ubuntu-latest
+    env:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # o Sonar precisa do histórico para atribuir código novo
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      - name: Build, testes e cobertura mínima (verify)
+        run: ./mvnw -B verify
+
+      - name: Resumo de cobertura na página da execução
+        if: always()
+        run: |
+          if [ -f target/site/jacoco/jacoco.csv ]; then
+            awk -F, 'NR>1 { m+=$8; c+=$9 } END { t=m+c; printf "### Cobertura de linhas: %.1f%% (%d de %d)\n\nMínimo exigido: 80%%. Relatório completo no artefato `evidencias-testes-cobertura`.\n", (t==0?100:100*c/t), c, t }' target/site/jacoco/jacoco.csv >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Análise de qualidade (SonarQube Cloud)
+        if: env.SONAR_TOKEN != ''
+        run: >
+          ./mvnw -B org.sonarsource.scanner.maven:sonar-maven-plugin:sonar
+          -Dsonar.host.url=https://sonarcloud.io
+          -Dsonar.organization=${{ vars.SONAR_ORGANIZATION }}
+          -Dsonar.projectKey=${{ vars.SONAR_PROJECT_KEY }}
+          -Dsonar.coverage.exclusions=**/ExecutionServiceApplication.java
+          -Dsonar.qualitygate.wait=true
+
+      - name: Aviso — Sonar não configurado
+        if: env.SONAR_TOKEN == ''
+        run: |
+          echo "::warning::SONAR_TOKEN ausente - analise do Sonar ignorada. Veja o README (Qualidade)."
+
+      - name: Evidência de cobertura e testes
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: evidencias-testes-cobertura
+          path: |
+            target/site/jacoco/
+            target/surefire-reports/
+          retention-days: 30
+
+  # ------------------------------------------------------------------
+  # 2) Constrói a imagem Docker. Só publica no ECR na main, com deploy ligado.
+  # ------------------------------------------------------------------
+  docker:
+    needs: build-test
+    runs-on: ubuntu-latest
+    outputs:
+      imagem: ${{ steps.meta.outputs.imagem }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Constrói a imagem (sem publicar)
+        if: ${{ !(github.ref == 'refs/heads/main' && vars.DEPLOY_ENABLED == 'true') }}
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          tags: execution-service:ci
+
+      - name: Credenciais AWS
+        if: ${{ github.ref == 'refs/heads/main' && vars.DEPLOY_ENABLED == 'true' }}
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Login no ECR
+        id: ecr
+        if: ${{ github.ref == 'refs/heads/main' && vars.DEPLOY_ENABLED == 'true' }}
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Define o nome da imagem
+        id: meta
+        if: ${{ github.ref == 'refs/heads/main' && vars.DEPLOY_ENABLED == 'true' }}
+        run: echo "imagem=${{ steps.ecr.outputs.registry }}/execution-service:${{ github.sha }}" >> "$GITHUB_OUTPUT"
+
+      - name: Publica a imagem no ECR
+        if: ${{ github.ref == 'refs/heads/main' && vars.DEPLOY_ENABLED == 'true' }}
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.imagem }}
+
+  # ------------------------------------------------------------------
+  # 3) Deploy no EKS (só main e só com a variável DEPLOY_ENABLED=true).
+  # ------------------------------------------------------------------
+  deploy:
+    needs: docker
+    if: ${{ github.ref == 'refs/heads/main' && vars.DEPLOY_ENABLED == 'true' }}
+    runs-on: ubuntu-latest
+    environment: producao
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Conecta ao cluster
+        run: aws eks update-kubeconfig --name "${{ vars.EKS_CLUSTER_NAME }}" --region "${{ vars.AWS_REGION }}"
+
+      # ConfigMap, ServiceAccount (IRSA), Secrets e o balanceador público são criados uma vez pelo script
+      # scripts/deploy/deploy-aws.ps1 (valores vêm do Terraform). A pipeline só publica a nova versão.
+      - name: Aplica o Deployment com a imagem do commit
+        run: |
+          mkdir -p out
+          cp k8s/deployment.yaml out/
+          sed -i "s|IMAGEM_AQUI|${{ needs.docker.outputs.imagem }}|" out/deployment.yaml
+          kubectl apply -f out/deployment.yaml
+
+      - name: Aguarda o rollout
+        run: kubectl -n oficina rollout status deployment/execution-service --timeout=300s
