@@ -3,6 +3,7 @@
 > Os diagramas abaixo descrevem o que existe no código (pacotes `domain` de cada serviço) e o contrato de
 > [`eventos.md`](eventos.md). Os limites dos contextos estão justificados no [ADR-001](adr/001-microsservicos-e-limites.md).
 
+> Event Storming (eventos, comandos, políticas e pontos de atenção): [`event-storming.md`](event-storming.md).
 > Imagens prontas para o PDF de entrega: [`diagramas/ddd/`](diagramas/ddd/) (um PNG por diagrama).
 
 ## 1. Subdomínios e contextos delimitados

@@ -73,4 +73,4 @@ Arquitetura, ADRs, contrato de eventos e Saga: pasta `docs/`. Colecao Postman e 
 ## Documentação
 
 - [Documentação deste serviço](docs/servico.md): responsabilidade, API, mensagens, modelo e testes.
-- [Arquitetura](docs/arquitetura.md), [modelagem DDD](docs/ddd.md), [eventos e Saga](docs/eventos.md) e [decisões (ADRs)](docs/adr/).
+- [Arquitetura](docs/arquitetura.md), [modelagem DDD](docs/ddd.md), [Event Storming](docs/event-storming.md), [eventos e Saga](docs/eventos.md) e [decisões (ADRs)](docs/adr/).

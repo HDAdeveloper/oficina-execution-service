@@ -5,7 +5,7 @@
 
 ## 1. Visão geral
 
-> Modelagem de domínio (contextos, agregados, estados e linguagem ubíqua): [`ddd.md`](ddd.md).
+> Modelagem de domínio (contextos, agregados, estados e linguagem ubíqua): [`ddd.md`](ddd.md). Event Storming: [`event-storming.md`](event-storming.md).
 
 Três microsserviços independentes (repositório, pipeline, banco e implantação próprios), conversando por **REST** (usuário → serviço)
 e por **mensageria assíncrona** (serviço ↔ serviço), coordenados por uma **Saga orquestrada**.
