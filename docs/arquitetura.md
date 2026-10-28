@@ -6,6 +6,8 @@
 
 ## 1. Visão geral
 
+> Modelagem de domínio (contextos, agregados, estados e linguagem ubíqua): [`ddd.md`](ddd.md).
+
 Três microsserviços independentes (repositório, pipeline, banco e implantação próprios), conversando por **REST** (usuário → serviço)
 e por **mensageria assíncrona** (serviço ↔ serviço), coordenados por uma **Saga orquestrada**.
 

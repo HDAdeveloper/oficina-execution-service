@@ -56,7 +56,7 @@ Configure no repositorio (Settings -> Secrets and variables -> Actions):
 | Tipo | Nome | Valor |
 |---|---|---|
 | Secret | `SONAR_TOKEN` | token do SonarQube Cloud |
-| Secret | `AWS_ROLE_ARN` | `terraform output role_pipeline_arn` |
+| Secret | `AWS_ROLE_ARN` | `terraform output role_da_pipeline` |
 | Variable | `SONAR_ORGANIZATION`, `SONAR_PROJECT_KEY` | dados do projeto no SonarQube Cloud |
 | Variable | `AWS_REGION`, `EKS_CLUSTER_NAME` | `us-east-1`, `oficina-eks` |
 | Variable | `DEPLOY_ENABLED` | `true` so quando o ambiente AWS estiver de pe |
@@ -69,3 +69,8 @@ Agente Java do New Relic embutido na imagem. Fica desligado ate existir o segred
 ## Documentacao
 
 Arquitetura, ADRs, contrato de eventos e Saga: pasta `docs/`. Colecao Postman e Swagger: ver abaixo.
+
+## Documentação
+
+- [Documentação deste serviço](docs/servico.md): responsabilidade, API, mensagens, modelo e testes.
+- [Arquitetura](docs/arquitetura.md), [modelagem DDD](docs/ddd.md), [eventos e Saga](docs/eventos.md) e [decisões (ADRs)](docs/adr/).

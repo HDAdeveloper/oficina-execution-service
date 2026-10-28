@@ -1,0 +1,7 @@
+﻿Cobertura de testes - execution-service
+Gerado em 2026-10-23 20:21, commit 721ea38 (fonte: execution-service/target/site/jacoco/jacoco.csv)
+Linhas      : 93.1% (692 de 743)  - mÃ­nimo exigido 80%: OK
+InstruÃ§Ãµes  : 93.6% (3789 de 4049)
+Branches    : 81.8% (180 de 220)
+MÃ©todos     : 94.2% (196 de 208)
+RelatÃ³rio completo: execution-service/target/site/jacoco/index.html
