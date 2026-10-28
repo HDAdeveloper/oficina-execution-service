@@ -16,7 +16,9 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filtros(HttpSecurity http, JwtAuthenticationConverter conversor) throws Exception {
         http
-                .csrf(AbstractHttpConfigurer::disable)
+                // CSRF só ameaça autenticação por cookie de sessão. Aqui não há sessão nem cookie: toda chamada
+                // leva o JWT no cabeçalho Authorization, que o navegador não envia sozinho. Por isso é seguro desligar.
+                .csrf(AbstractHttpConfigurer::disable) // NOSONAR java:S4502 - API stateless com Bearer token
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(a -> a
                         .requestMatchers("/actuator/health", "/actuator/health/**", "/actuator/info").permitAll()
