@@ -1,7 +1,6 @@
 # Arquitetura
 
-> Documento vivo. As partes **implementadas** descrevem o que existe no código; as marcadas **(planejado)** serão confirmadas
-> nas Etapas 5–7 e o documento é revisado na Etapa 8 (junto com o diagrama final para o PDF).
+> Documento vivo. As partes **implementadas** descrevem o que existe no código; o que ainda depende do deploy final na AWS está indicado no texto.
 > Decisões e justificativas completas: [`adr/`](adr/). Mensagens e compensações: [`eventos.md`](eventos.md).
 
 ## 1. Visão geral
@@ -13,13 +12,13 @@ e por **mensageria assíncrona** (serviço ↔ serviço), coordenados por uma **
 
 ```mermaid
 flowchart LR
-    U([Atendente / Cliente]) -->|HTTPS| GW[API Gateway<br/>(planejado)]
-    GW -->|CPF| L[Lambda de autenticação<br/>(planejado)]
+    U([Atendente / Cliente]) -->|HTTPS| GW["API Gateway"]
+    GW -->|CPF| L["Lambda de autenticação"]
     GW --> OS
     GW --> BI
     GW --> EX
 
-    subgraph K8s["EKS (planejado)"]
+    subgraph K8s["EKS"]
         OS["OS Service<br/>orquestrador da Saga<br/>:8080"]
         BI["Billing Service<br/>:8082"]
         EX["Execution Service<br/>:8083"]
@@ -40,7 +39,7 @@ flowchart LR
     SNSE --> QO[[SQS os-events]]
     QO --> OS
 
-    BI -. pagamento .-> MP[Mercado Pago<br/>(simulado primeiro)]
+    BI -. pagamento .-> MP["Mercado Pago<br/>(simulado primeiro)"]
 ```
 
 | Serviço | Responsabilidade | Banco | Porta local |
@@ -115,7 +114,7 @@ SNS + SQS ([ADR-003](adr/003-mensageria-sns-sqs.md)):
 ## 6. Segurança
 
 - API protegida por **JWT HS256** (segredo compartilhado, vindo de Secret do Kubernetes; nunca no Git). O OS Service emite; Billing e Execution validam.
-- Autenticação do cliente por **CPF** via Lambda atrás do API Gateway **(planejado, Etapa 6)**.
+- Autenticação do cliente por **CPF** via Lambda atrás do API Gateway (`POST /auth/cpf`): a Lambda valida o CPF, consulta o OS Service com um token de serviço e devolve um JWT com papel `CLIENTE` ([ADR-007](adr/007-autenticacao-cpf-lambda.md)).
 - Credenciais do Mercado Pago e da AWS apenas em Secrets/variáveis de ambiente de CI.
 
 ## 7. Observabilidade
@@ -125,17 +124,19 @@ SNS + SQS ([ADR-003](adr/003-mensageria-sns-sqs.md)):
 
 ## 8. Implantação e CI/CD
 
-**(planejado, Etapa 7)**
+Ensaio completo do Terraform e do deploy feito em 25–26/10; o deploy final acontece perto da gravação do vídeo (a infraestrutura custa por hora e é destruída logo depois).
+
 - **Local:** `docker-compose` (2 Postgres + LocalStack com SNS, SQS e DynamoDB) — [ADR-005](adr/005-ambiente-local-localstack.md).
 - **AWS:** Terraform → EKS, API Gateway, Lambda, SNS/SQS, RDS PostgreSQL ×2, DynamoDB. Cada serviço tem `Dockerfile` e manifestos `k8s/`.
 - **Pipeline por serviço (GitHub Actions):** build → testes + cobertura (JaCoCo, mínimo 80%) → SonarQube Cloud → imagem → deploy no EKS. `main` protegida, merge só por PR.
 
 ## 9. Qualidade
 
-- Cobertura mínima de 80% por serviço, **imposta no build** (JaCoCo): Billing 90,5% de linhas; demais em [`cobertura.md`](cobertura.md).
+- Cobertura mínima de 80% por serviço, **imposta no build** (JaCoCo): OS Service 94,9%, Billing 90,5% e Execution 93,1% de linhas (evidências em [`cobertura.md`](cobertura.md)).
 - Testes de integração com **Testcontainers** (Postgres e LocalStack reais), sem mocks de banco.
 - Scripts ponta a ponta contra o LocalStack: `scripts/local/billing-e2e.sh`, `execution-e2e.sh`.
-- BDD de um fluxo completo da Saga **(planejado, Etapa 5)**.
+- BDD (Cucumber) do fluxo completo da Saga, com compensação, no OS Service: `src/test/resources/features/saga_ordem_servico.feature`.
+- Scripts ponta a ponta: `scripts/local/saga-e2e.ps1` (4 cenários da Saga) e `auth-cpf-e2e.ps1` (login por CPF e papéis).
 
 ## 10. Trade-offs assumidos
 
