@@ -679,3 +679,6 @@ Hoje o diagnóstico fica no OS Service e o Execution só entra a partir de `EM_E
 - `POST /api/clientes` com o CPF de um cliente inativo continua dando 409, agora com a mensagem "(está inativo: use a reativação)".
 - Domínio: `Cliente.reativar()`; porta `GestaoClientes.reativar`; testes em `CatalogoTest`, `CadastrosServiceTest`, `ClienteControllerTest` (200, 404, 403 para CLIENTE) e `ApiFluxoCompletoTest` (DELETE → 409 no cadastro → reativação → ativo). Postman: requisição "Reativar cliente".
 - **Como testar:** `.\mvnw.cmd clean verify` no os-service; no Swagger: `DELETE /api/clientes/{cpf}`, `GET /api/clientes` (some da lista), `POST /api/clientes/{cpf}/reativacao` (volta, `ativo: true`). Não executado por mim (sem Maven aqui).
+
+## Aviso ao cliente: evolução futura (29/10)
+- Conferido: não há envio de e-mail/SMS/push em nenhum serviço (o `emailCliente` só viaja no `CRIAR_ORCAMENTO` e vira o pagador no gateway). Decisão do usuário: **fica para o futuro**. Registrado em `docs/event-storming.md` (pontos de atenção) com o caminho sugerido: consumidor dos eventos da Saga, via SNS→e-mail ou serviço de notificações com SES.
