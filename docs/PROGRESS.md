@@ -673,3 +673,9 @@ Hoje o diagnóstico fica no OS Service e o Execution só entra a partir de `EM_E
 - **Salvar o mesmo CPF duas vezes** passa a atualizar o cliente no repositório; quem impede o duplicado é o `ClienteService` (409). A corrida entre duas inserções simultâneas ainda é barrada pela chave primária.
 - **Como testar:** (1) `.\mvnw.cmd clean verify` em os-service, billing-service e `mvn verify` em auth-lambda (Testcontainers sobe o Postgres e roda a V3/V2); (2) com o ambiente local no ar: `POST /api/clientes` devolve `"id": "11144477735"`; `GET /api/clientes/111.444.777-35` acha o mesmo; cadastre um veículo com `"clienteId": "11144477735"`; `scripts\local\saga-e2e.ps1` e `auth-cpf-e2e.ps1` continuam verdes. Em banco local antigo a V3 converte os dados; se preferir, `docker compose down -v`.
 - Não compilei nem rodei os testes aqui (sem acesso ao Maven): validar na máquina do usuário.
+
+## Reativação de cliente (29/10)
+- `DELETE /api/clientes/{id}` continua sendo exclusão lógica (`ativo = false`, histórico preservado). Novo **`POST /api/clientes/{id}/reativacao`** (só ADMIN) volta o cliente a ativo; é idempotente e devolve o cliente (200), ou 404 se o CPF não existe.
+- `POST /api/clientes` com o CPF de um cliente inativo continua dando 409, agora com a mensagem "(está inativo: use a reativação)".
+- Domínio: `Cliente.reativar()`; porta `GestaoClientes.reativar`; testes em `CatalogoTest`, `CadastrosServiceTest`, `ClienteControllerTest` (200, 404, 403 para CLIENTE) e `ApiFluxoCompletoTest` (DELETE → 409 no cadastro → reativação → ativo). Postman: requisição "Reativar cliente".
+- **Como testar:** `.\mvnw.cmd clean verify` no os-service; no Swagger: `DELETE /api/clientes/{cpf}`, `GET /api/clientes` (some da lista), `POST /api/clientes/{cpf}/reativacao` (volta, `ativo: true`). Não executado por mim (sem Maven aqui).
