@@ -46,6 +46,7 @@ public class ApplicacaoConfig {
 
     @Bean(destroyMethod = "close")
     public DynamoDbClient dynamoDbClient(AwsProperties p) {
+        AvisoAwsReal.verificar(p.endpoint());
         var b = DynamoDbClient.builder().region(Region.of(p.regiao()));
         if (p.temEndpointProprio()) {
             // LocalStack: endpoint próprio e credenciais fictícias. Na AWS vale a cadeia padrão de credenciais.
