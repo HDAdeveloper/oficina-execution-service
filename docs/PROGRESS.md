@@ -682,3 +682,6 @@ Hoje o diagnóstico fica no OS Service e o Execution só entra a partir de `EM_E
 
 ## Aviso ao cliente: evolução futura (29/10)
 - Conferido: não há envio de e-mail/SMS/push em nenhum serviço (o `emailCliente` só viaja no `CRIAR_ORCAMENTO` e vira o pagador no gateway). Decisão do usuário: **fica para o futuro**. Registrado em `docs/event-storming.md` (pontos de atenção) com o caminho sugerido: consumidor dos eventos da Saga, via SNS→e-mail ou serviço de notificações com SES.
+
+## Estoque como microsserviço: evolução futura (29/10)
+- Avaliado separar o estoque do Execution Service. Decisão do usuário: **manter e registrar como evolução futura**. Justificativa (custo/prazo, mudança da Saga, não é requisito, já separado por pacotes e portas) e caminho da extração em `docs/adr/008-estoque-no-execution-service-evolucao-futura.md`; também em `docs/event-storming.md` (pontos de atenção).

@@ -171,6 +171,7 @@ Estados de cada agregado: [`ddd.md`](ddd.md), seção 4.
 |---|---|---|
 | 🟥 Cobrança na retirada do veículo | Hoje o cliente paga na aprovação, antes de reservar estoque. Pagar só na entrega muda a ordem da Saga e o sentido das compensações (o conserto não se desfaz) | **Adiado.** Registrado como evolução futura; fluxo atual mantido |
 | 🟥 Aviso ao cliente (e-mail/SMS) | Hoje ninguém avisa o cliente: o e-mail só segue no comando `CRIAR_ORCAMENTO` e é usado como pagador no gateway. O cliente consulta `GET /api/minhas-ordens` | **Adiado.** Evolução futura: um consumidor dos eventos da Saga já existentes (orçamento pronto, pago, finalizado, cancelada), via SNS direto para e-mail ou um serviço de notificações com SES; não altera o domínio nem as compensações |
+| 🟥 Estoque como serviço próprio | Estoque e execução são assuntos distintos e o cadastro da peça está dividido entre OS (nome/preço) e Execution (quantidade) | **Adiado.** Permanece no Execution Service; extração registrada como evolução futura no [ADR-008](adr/008-estoque-no-execution-service-evolucao-futura.md) |
 | 🟥 Estorno que não conclui | O Mercado Pago pode falhar ao estornar | Reenvia e, esgotadas as tentativas, a Saga fica em `ESTORNO_PENDENTE` para ação manual (DLQ + alerta) |
 | 🟥 Estoque liberado que não conclui | Falha ao devolver as peças | Fica em `LIBERACAO_PENDENTE`; ação manual |
 | 🟥 Mercado Pago real | Hoje o adaptador é simulado (`APRO`, `FUND`, `OTHE`, `ERRO`, `ERRO_ESTORNO`) | A integração real é um novo adaptador da porta `PagamentoGateway`, sem mudar o domínio |
