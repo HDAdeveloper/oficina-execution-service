@@ -64,7 +64,7 @@ classDiagram
         <<Aggregate Root>>
         Long id
         String numero
-        Long clienteId
+        String clienteId
         Long veiculoId
         StatusOS status
         String descricaoProblema
@@ -121,7 +121,7 @@ classDiagram
     }
     class Cliente {
         <<Aggregate Root>>
-        Long id
+        String id
         String nome
         String email
     }
@@ -159,7 +159,7 @@ classDiagram
     Saga "1" *-- "0..*" PassoSaga
     Cliente *-- Documento
     Veiculo *-- Placa
-    OrdemServico ..> Cliente : clienteId
+    OrdemServico ..> Cliente : clienteId (CPF ou CNPJ)
     OrdemServico ..> Veiculo : veiculoId
     Saga ..> OrdemServico : osId
     ItemServicoOS ..> Servico : servicoId
@@ -179,7 +179,7 @@ classDiagram
         <<Aggregate Root>>
         String id
         Long osId
-        Long clienteId
+        String clienteId
         String emailCliente
         BigDecimal valorTotal
         StatusOrcamento status

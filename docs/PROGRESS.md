@@ -633,3 +633,43 @@ Hoje o diagnóstico fica no OS Service e o Execution só entra a partir de `EM_E
 2. Rodar `separar-repos.ps1 -Publicar` (precisa do `gh auth login`); cadastrar secrets/variáveis em cada repo; proteger `main`.
 3. Diagramas finais, `docs/roteiro-video.md`, PDF de entrega.
 4. Dia do deploy real: `terraform apply` (2 fases), `deploy-aws.ps1`, validar pela API Gateway, painel New Relic, gravar o vídeo, `terraform destroy`.
+
+## Repositórios publicados (26/10) e pendências de entrega
+- Criados e populados na `main`: `oficina-os-service`, `oficina-billing-service`, `oficina-execution-service`, `oficina-auth-lambda`, `oficina-infra` (conta HDAdeveloper, privados). `oficina-workspace` segue como repositório central (docs, scripts, docker-compose).
+- **Adiado de propósito para perto da entrega (10/11):** convidar o usuário `soat-architecture` como colaborador nos 5 repositórios (e no workspace); proteger a `main` com PR; cadastrar secrets/variáveis das pipelines (README de cada repo); conferir se o convite foi aceito. **Cobrar o usuário até 05/11.**
+- Pendente do usuário: conta New Relic (licença), conta SonarQube Cloud (token), alerta de orçamento US$ 20 e MFA da conta root.
+
+## Documentação de domínio (28/10)
+- Feitos e publicados nos 6 repositórios: `docs/ddd.md` (contextos, agregados, estados, glossário), `docs/event-storming.md` e PNGs em `docs/diagramas/`. Cada repositório tem também `docs/servico.md`.
+- Event Storming visual (quadro de post-its, 3 pranchas) criado como artefato privado no claude.ai, aprovado pelo usuário. Para o PDF: exportar cada prancha como imagem pelo editor e, se o avaliador for ver o quadro online, compartilhar pelo menu Share.
+- Decisão registrada: pagamento na retirada do veículo fica como evolução futura (fluxo atual mantido).
+- Pendente do usuário: token do SonarQube Cloud nos secrets dos repos, licença New Relic (só no dia do deploy), alerta de orçamento e MFA da AWS; convite do `soat-architecture` e proteção da `main` perto da entrega (cobrar até 05/11).
+- Próximos passos: roteiro do vídeo (`docs/roteiro-video.md`), esqueleto do PDF de entrega, deploy real e gravação (apply → deploy → vídeo → destroy).
+
+## Carga inicial de serviços e peças (28/10)
+- `scripts/seed/seed-catalogo.ps1` + `catalogo.json`: 10 serviços básicos e 20 peças; grava o catálogo no OS Service e o estoque no Execution Service (mesmo `codigo`). Idempotente. `KIT-CORREIA` (estoque 0) e `BAT-60AH` (1 un.) servem para demonstrar a compensação B.
+- **Como testar (local):** suba o docker compose, OS (8080/8081) e Execution (8083); rode `.\scripts\seed\seed-catalogo.ps1` (com `-Os http://localhost:8081` se for o caso). Esperado: `TUDO CERTO`; rode de novo e tudo deve sair `[existe]`. Confira em `GET /api/pecas` e `GET /api/estoque`.
+- Não foi executado por mim (sem PowerShell nem serviços no meu ambiente): validar na máquina do usuário.
+
+## Subida local em um comando e aviso de AWS real (29/10)
+- **Causa dos erros de hoje:** OS e Execution iniciados sem `AWS_ENDPOINT_URL` falaram com a AWS real (perfil `oficina`/`amplify-dev`): `QueueDoesNotExist` no OS e `dynamodb:CreateTable` negado no Execution. O seed do OS Service passou; o estoque (Execution) ficou pendente.
+- **`scripts/local/subir-servicos.ps1`** (`-OsPort`, `-Seed`): `docker compose up -d --wait`, confere as 6 filas e as portas livres, abre uma janela por serviço com `AWS_ENDPOINT_URL` definido e sem `AWS_PROFILE`, espera o health e, com `-Seed`, roda a carga do catálogo.
+- **`AvisoAwsReal`** nos 3 serviços (`infrastructure/config`): WARN destacado na partida se `AWS_ENDPOINT_URL` estiver vazio fora de Kubernetes/Lambda (detecta `KUBERNETES_SERVICE_HOST`, `AWS_WEB_IDENTITY_TOKEN_FILE`, `AWS_EXECUTION_ENV`). Testes unitários em `AvisoAwsRealTest`. Não bloqueia a partida.
+- **Como testar:** (1) `.\mvnw.cmd clean verify` em cada serviço (testes novos + cobertura >= 80%); (2) feche os serviços e rode `scripts\local\subir-servicos.ps1 -Seed`: três janelas, health UP, seed com `TUDO CERTO`; (3) para ver o aviso, abra um serviço sem a variável e confira o bloco "ATENCAO ... AWS REAL" no log (use um terminal sem credenciais para não criar nada na conta).
+- Não executado por mim (sem PowerShell/Maven no meu ambiente): só compilei e exercitei a classe do aviso isoladamente. Validar na máquina do usuário.
+
+## Correção do seed: duplicados por array JSON no PowerShell 5.1 (29/10)
+- **Sintoma (rodada com `subir-servicos.ps1 -Seed`):** os 10 serviços saíram `[criado]` de novo (duplicados), as peças deram `409` e o estoque falhou com "índice de matriz avaliado como nulo".
+- **Causa:** no Windows PowerShell 5.1, `Invoke-RestMethod` entrega um array JSON como um único objeto. A checagem "já existe" (`GET /api/servicos`, `/api/pecas`, `/api/estoque`) nunca achava nada, e a lista vazia do estoque virava um item sem `codigo`.
+- **Correção:** `Chama` em `seed-catalogo.ps1` desenrola a resposta (`foreach ($item in $r) { $item }`).
+- **Limpeza necessária no ambiente local:** os serviços duplicados já gravados no Postgres do OS. Resetar com os serviços fechados: `docker compose down -v` e depois `subir-servicos.ps1 -Seed`.
+- **Como testar:** após o reset, `-Seed` termina em `TUDO CERTO`; rodar o seed de novo mostra tudo `[existe]` e `GET /api/servicos` retorna 10 itens.
+
+## CPF/CNPJ como identificador do cliente (29/10)
+- **Decisão (usuário):** o id do cliente é o próprio documento (CPF ou CNPJ, só dígitos), sem id numérico gerado.
+- **OS Service:** `Cliente` perde o componente `id` (o `id()` devolve `documento().numero()`); `cliente.documento` vira a chave primária; `Veiculo.clienteId`, `OrdemServico.clienteId` e `ClienteRepository.buscarPorId` passam a `String` (o repositório não tem mais `buscarPorDocumento`). API: `GET/PUT/DELETE /api/clientes/{id}` aceita CPF/CNPJ com ou sem pontuação; `VeiculoRequest.clienteId` e `GET /api/veiculos?clienteId=` recebem o documento; `ClienteResponse.id` é texto. A rota `GET /api/clientes/documento/{doc}` continua (usada pela Lambda).
+- **Migration V3 (OS):** converte os dados existentes (ids antigos viram o documento nas tabelas `veiculo` e `ordem_servico`, FKs e índices recriados). **Billing V2:** `orcamento.cliente_id` vira `VARCHAR(14)`.
+- **Mensagens da Saga:** `CRIAR_ORCAMENTO.clienteId` agora é texto (o Billing lê com `asText`, então ainda aceita número antigo). **Lambda:** o claim `clienteId` do token e o `Cliente` do gateway são texto.
+- **Salvar o mesmo CPF duas vezes** passa a atualizar o cliente no repositório; quem impede o duplicado é o `ClienteService` (409). A corrida entre duas inserções simultâneas ainda é barrada pela chave primária.
+- **Como testar:** (1) `.\mvnw.cmd clean verify` em os-service, billing-service e `mvn verify` em auth-lambda (Testcontainers sobe o Postgres e roda a V3/V2); (2) com o ambiente local no ar: `POST /api/clientes` devolve `"id": "11144477735"`; `GET /api/clientes/111.444.777-35` acha o mesmo; cadastre um veículo com `"clienteId": "11144477735"`; `scripts\local\saga-e2e.ps1` e `auth-cpf-e2e.ps1` continuam verdes. Em banco local antigo a V3 converte os dados; se preferir, `docker compose down -v`.
+- Não compilei nem rodei os testes aqui (sem acesso ao Maven): validar na máquina do usuário.

@@ -59,7 +59,7 @@ Atributos de mensagem SNS (usados para roteamento, não fazem parte do corpo):
 
 | `type` | `target` | Payload | Efeito |
 |---|---|---|---|
-| `CRIAR_ORCAMENTO` | billing | `itens[]` (`tipo` SERVICO/PECA, `codigo`, `descricao`, `quantidade`, `precoUnitario`), `valorTotal`, `clienteId`, `emailCliente` | Cria o orçamento (PENDENTE). |
+| `CRIAR_ORCAMENTO` | billing | `itens[]` (`tipo` SERVICO/PECA, `codigo`, `descricao`, `quantidade`, `precoUnitario`), `valorTotal`, `clienteId` (CPF/CNPJ só com dígitos, texto), `emailCliente` | Cria o orçamento (PENDENTE). |
 | `COBRAR_ORCAMENTO` | billing | `orcamentoId`, `valorTotal`, `metodo` | Inicia o pagamento. |
 | `CANCELAR_ORCAMENTO` | billing | `orcamentoId`, `motivo` | Cancela o orçamento (compensação). |
 | `ESTORNAR_PAGAMENTO` | billing | `pagamentoId`, `motivo` | Estorna o pagamento (compensação). |
