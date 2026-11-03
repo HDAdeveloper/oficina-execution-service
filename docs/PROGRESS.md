@@ -685,3 +685,41 @@ Hoje o diagnóstico fica no OS Service e o Execution só entra a partir de `EM_E
 
 ## Estoque como microsserviço: evolução futura (29/10)
 - Avaliado separar o estoque do Execution Service. Decisão do usuário: **manter e registrar como evolução futura**. Justificativa (custo/prazo, mudança da Saga, não é requisito, já separado por pacotes e portas) e caminho da extração em `docs/adr/008-estoque-no-execution-service-evolucao-futura.md`; também em `docs/event-storming.md` (pontos de atenção).
+
+## Roteiro de narração (31/10)
+- `docs/roteiro-narracao.md`: narração completa com tempos (14:30), o que mostrar em cada trecho, plano de corte e checklist. Pendências a preencher: nomes do grupo, percentuais de cobertura atuais, tela do Sonar e da proteção da `main`; o bloco da AWS só pode ser gravado no dia do deploy real.
+
+## Participante (31/10)
+- O grupo tem **um participante**: Henrique Dellagnesi Azevedo, RM 372407. O roteiro de narração foi reescrito em primeira pessoa do singular e o PDF de entrega deve listar só esse participante.
+
+## Pagamento por link com o Mercado Pago (31/10)
+- **Decisão (usuário):** entregar o pagamento por **link** (Checkout Pro). ADR: `docs/adr/009-pagamento-por-link-checkout-pro.md`; passo a passo da conta de testes: `docs/mercado-pago.md`.
+- **Billing:** `PagamentoGateway` ganhou `LinkGerado` e `consultarPagamento`; novo `PagamentoGatewayMercadoPago` (preferência, consulta, estorno via `RestClient`) e `PagamentoGatewaySimulado` com método `LINK`. Provedor escolhido por `PAGAMENTO_PROVEDOR` (`simulado` padrão | `mercadopago`); com `mercadopago` o serviço não sobe sem `MERCADOPAGO_ACCESS_TOKEN` e `MERCADOPAGO_WEBHOOK_SECRET`.
+- **Domínio:** `StatusPagamento` + `AGUARDANDO`/`EXPIRADO`; `Pagamento` guarda `sagaId`, `correlationId`, `linkPagamento`, `expiraEm` (a confirmação chega por webhook, fora da Saga). **Migration V3** (colunas + índice único de um link aguardando por orçamento).
+- **Novos casos de uso:** `ConfirmacaoPagamentoService` (webhook → consulta → `PAGAMENTO_APROVADO`; vencimento → `PAGAMENTO_RECUSADO`; pagamento tardio/duplicado devolvido sozinho); `ExpiradorDeLinks` (a cada 10 s). `COBRAR_ORCAMENTO` repetido devolve o mesmo link; `CANCELAR_ORCAMENTO` expira o link.
+- **Rotas:** `POST /webhooks/mercadopago` (pública, assinatura `x-signature` HMAC-SHA256), `POST /api/mercadopago/pagamentos/{id}/sincronizar` (ADMIN, conciliação manual), `POST /api/simulador/pagamentos/{id}/aprovar|expirar` (ADMIN, só simulado).
+- **OS Service:** novo estado de Saga `AGUARDANDO_PAGAMENTO` (prazo = validade do link + 60 s, sem reenvio; vencido → compensação A), evento `LINK_PAGAMENTO_GERADO`, `Saga.linkPagamento` (**migration V4**), `SagaResponse.linkPagamento`. Diagrama `06-estados-saga.png` regenerado; `docs/eventos.md`, `docs/ddd.md`, `billing-service/docs/servico.md` atualizados.
+- **Scripts/Postman:** `saga-e2e.ps1` ganhou os cenários 5 (link pago) e 6 (link vencido); Postman: "Aprovar orçamento com pagamento por LINK".
+- **Fora do escopo (declarado):** webhook na AWS (Billing não é exposto pelo API Gateway; lá o provedor segue `simulado`); cancelar um link aberto; e-mail com o link (ver "Aviso ao cliente").
+- **Como testar sem conta:** `.\mvnw.cmd clean verify` em `os-service` e `billing-service`; com o ambiente local: `scripts\local\saga-e2e.ps1` (6 cenários, usa o simulador). **Com conta de testes:** `docs/mercado-pago.md`.
+- Não compilei nem rodei os testes aqui (sem Maven): validar na máquina do usuário. Pontos do Mercado Pago ainda não conferidos contra a API real estão listados em `docs/mercado-pago.md` (seção 5).
+
+## Monitor visual da Saga (01/11)
+
+Página `http://localhost:8081/saga-monitor.html` (OS Service, estática): lista das últimas 30 Sagas (`GET /api/sagas`, ADMIN), máquina de estados da OS escolhida com o caminho percorrido e o estado atual, e a "escada" de comandos/eventos entre OS Service, Billing e Execution (atualiza a cada 1 s). Em `AGUARDANDO_PAGAMENTO` mostra o link e os botões do simulador do Billing (CORS em `billing.cors.origens`, padrão `http://localhost:8081`). Login embutido (admin/admin123 em dev).
+
+### Painel de demonstração no monitor (02/11)
+
+O monitor ganhou o "Painel de demonstração": o botão **Criar OS de demonstração** monta cliente, veículo, serviço, peça, estoque e OS até o orçamento, no cenário escolhido (caminho feliz, link, compensações A/B/C, provedor fora do ar). Os botões mudam conforme o estado da Saga (aprovar/recusar, simular pagamento/vencimento do link, iniciar/finalizar/falhar execução) e uma dica diz o que explicar em cada cenário. O Execution ganhou CORS (`execution.cors.origens`, padrão `http://localhost:8081`) para o navegador chamá-lo.
+
+### Teste real com o Mercado Pago (02/11)
+Com a conta de teste: o Billing criou o link (Checkout Pro), o pagamento foi feito com o comprador e cartão de teste e a conciliação manual (`POST /api/mercadopago/pagamentos/{id}/sincronizar`) levou a Saga a `EM_EXECUCAO`. Pendentes: estorno real, link vencido real e webhook assinado real (ver `docs/mercado-pago.md`, seção 5).
+
+### Webhook do Mercado Pago validado (03/11)
+Pagamento de teste (comprador de teste, túnel ngrok na porta 8082): o aviso chegou sozinho, a assinatura foi aceita e a Saga seguiu para a execução sem a conciliação manual. Falta o estorno real (compensação C com o provedor real).
+
+### Estorno real validado (03/11)
+Compensação C com o Mercado Pago de teste: pagamento aprovado, execução falhou, o Billing estornou e o painel mostrou *Reembolsado* (R$ 200,00). Saga final `CANCELADA`. Ainda sem teste real: link vencido (compensação A) com o provedor real.
+
+### Link vencido validado com o Mercado Pago (03/11)
+Com `PAGAMENTO_VALIDADE_LINK_MINUTOS=2`: link gerado 20:21:38, o Billing publicou `PagamentoRecusado` às 20:23:38 (vencimento), a Saga cancelou o orçamento e terminou `ENCERRADA` às 20:23:39. Toda a integração real (link, webhook, estorno, vencimento) está validada em teste.

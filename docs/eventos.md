@@ -73,8 +73,9 @@ Atributos de mensagem SNS (usados para roteamento, não fazem parte do corpo):
 | `ORCAMENTO_CRIADO` | Billing | `orcamentoId`, `valorTotal` | OS → `AGUARDANDO_APROVACAO` |
 | `ORCAMENTO_FALHOU` | Billing | `motivo` | OS permanece `EM_DIAGNOSTICO`; o erro entra no histórico |
 | `ORCAMENTO_CANCELADO` | Billing | `orcamentoId` | confirma a compensação |
+| `LINK_PAGAMENTO_GERADO` | Billing | `pagamentoId`, `orcamentoId`, `link`, `expiraEm` (ISO-8601) | Saga → `AGUARDANDO_PAGAMENTO` (guarda o link; o prazo passa a ser a validade do link) |
 | `PAGAMENTO_APROVADO` | Billing | `pagamentoId`, `orcamentoId` | envia `RESERVAR_ESTOQUE` |
-| `PAGAMENTO_RECUSADO` | Billing | `orcamentoId`, `motivo` | envia `CANCELAR_ORCAMENTO`; OS → `EM_DIAGNOSTICO` |
+| `PAGAMENTO_RECUSADO` | Billing | `orcamentoId`, `motivo` (inclui link vencido) | envia `CANCELAR_ORCAMENTO`; OS → `EM_DIAGNOSTICO` |
 | `PAGAMENTO_ESTORNADO` | Billing | `pagamentoId` | OS → `CANCELADA` |
 | `ESTOQUE_RESERVADO` | Execution | `reservaId` | OS → `EM_EXECUCAO` |
 | `ESTOQUE_INSUFICIENTE` | Execution | `faltantes[]` (`codigo`, `solicitado`, `disponivel`) e, se o pedido era inválido, `motivo` | envia `ESTORNAR_PAGAMENTO` |
@@ -157,7 +158,7 @@ O enunciado pede rollback "em qualquer etapa". Matriz de cobertura:
 | Passo | Falha | Tratamento |
 |---|---|---|
 | Criar orçamento | `ORCAMENTO_FALHOU` ou timeout | nada a desfazer; OS fica `EM_DIAGNOSTICO` e o atendente pode tentar de novo |
-| Cobrar | `PAGAMENTO_RECUSADO` ou pagamento expirado | compensação A (cancela o orçamento; OS → `EM_DIAGNOSTICO`) |
+| Cobrar | `PAGAMENTO_RECUSADO` ou link de pagamento vencido sem pagamento | compensação A (cancela o orçamento; OS → `EM_DIAGNOSTICO`) |
 | Reservar estoque | `ESTOQUE_INSUFICIENTE` ou timeout | compensação B (estorna o pagamento; OS → `CANCELADA`) |
 | Executar | `EXECUCAO_FALHOU` | compensação C (libera estoque e estorna; OS → `CANCELADA`) |
 | Estornar (a própria compensação) | erro ao estornar | reenvio com tentativas; esgotadas, a mensagem vai à DLQ e gera alerta para ação manual; a Saga fica em `ESTORNO_PENDENTE` |
@@ -196,12 +197,42 @@ ficam no estado interno da Saga (`saga_instance` no banco do OS Service), não e
 | Comando | Resposta | Observações |
 |---|---|---|
 | `CRIAR_ORCAMENTO` | `ORCAMENTO_CRIADO` ou `ORCAMENTO_FALHOU` | Recalcula o total a partir dos itens; se divergir do `valorTotal`, responde `ORCAMENTO_FALHOU`. Pedido repetido com os mesmos itens devolve o mesmo orçamento; com itens diferentes, o orçamento pendente antigo é cancelado e um novo é criado. OS que já tem orçamento **pago** recebe `ORCAMENTO_FALHOU`. |
-| `COBRAR_ORCAMENTO` | `PAGAMENTO_APROVADO` ou `PAGAMENTO_RECUSADO` | Cobrança repetida de orçamento já pago devolve o mesmo `pagamentoId`, sem cobrar de novo. Orçamento inexistente, não pendente ou com valor divergente é `PAGAMENTO_RECUSADO`. Se o provedor estiver fora do ar, a mensagem **não** é confirmada: volta à fila e, após 3 tentativas, vai à DLQ. |
+| `COBRAR_ORCAMENTO` | `PAGAMENTO_APROVADO`, `PAGAMENTO_RECUSADO` ou `LINK_PAGAMENTO_GERADO` (pagamento por link) | Cobrança repetida de orçamento já pago devolve o mesmo `pagamentoId`, sem cobrar de novo. Orçamento inexistente, não pendente ou com valor divergente é `PAGAMENTO_RECUSADO`. Se o provedor estiver fora do ar, a mensagem **não** é confirmada: volta à fila e, após 3 tentativas, vai à DLQ. |
 | `CANCELAR_ORCAMENTO` | `ORCAMENTO_CANCELADO` | Idempotente; orçamento inexistente também responde cancelado (nada a desfazer). Orçamento **pago** não é cancelado: o Billing registra erro em log e não responde (o orquestrador deve estornar, não cancelar). |
 | `ESTORNAR_PAGAMENTO` | `PAGAMENTO_ESTORNADO` | Idempotente. Pagamento inexistente ou recusado, ou provedor fora do ar, deixa a mensagem voltar à fila e ir à DLQ (`ESTORNO_PENDENTE`). |
 
+### Pagamento por link (Mercado Pago Checkout Pro)
+
+Com o provedor `mercadopago` (e, no simulado, com `metodo = LINK`) a cobrança deixa de ser instantânea e a Saga passa a **esperar o cliente**:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Cliente
+    participant OS as OS Service (orquestrador)
+    participant B as Billing Service
+    participant MP as Mercado Pago
+
+    OS-)B: COBRAR_ORCAMENTO
+    B->>MP: cria a preferência de pagamento
+    MP-->>B: link (init_point)
+    B--)OS: LINK_PAGAMENTO_GERADO (link, expiraEm)
+    Note over OS: Saga = AGUARDANDO_PAGAMENTO<br/>(prazo = validade do link + 60 s)
+    Cliente->>MP: abre o link e paga
+    MP->>B: webhook (assinado)
+    B->>MP: consulta o pagamento
+    B--)OS: PAGAMENTO_APROVADO
+    Note over OS: segue para RESERVAR_ESTOQUE
+```
+
+- **Link vencido sem pagamento:** o Billing (rotina a cada 10 s) marca o pagamento `EXPIRADO` e publica `PAGAMENTO_RECUSADO` com o motivo; o orquestrador roda a **compensação A**. Se o Billing não avisar, o prazo da Saga (validade + 60 s) dispara a mesma compensação, **sem reenviar** o `COBRAR_ORCAMENTO`.
+- **Cobrança repetida** (reenvio por timeout antes do link chegar) devolve o **mesmo link**; um link já vencido é substituído por outro.
+- **Pagamento tardio** (cliente paga depois de vencer, ou o orçamento foi cancelado): o Billing **devolve sozinho** pelo provedor e não mexe na Saga.
+- **O webhook só é um gatilho:** o Billing consulta o pagamento no Mercado Pago antes de decidir; avisos repetidos não geram eventos repetidos. Recusa de cartão não encerra o link: o cliente pode tentar de novo até ele vencer.
+- Enquanto o link está aberto o cliente **não** consegue recusar o orçamento (a Saga não está em `AGUARDANDO_APROVACAO`); cancelar o link é evolução futura.
+
 O campo `metodo` do `COBRAR_ORCAMENTO` comanda o provedor **simulado** (estilo cartões de teste do Mercado Pago):
-vazio/`APRO`/qualquer outro = aprovado; `FUND` = recusado por saldo insuficiente; `OTHE` = recusado pelo emissor;
+vazio/`APRO`/qualquer outro = aprovado; `LINK` = gera um link e espera (aprove com `POST /api/simulador/pagamentos/{pagamentoId}/aprovar` ou venza com `.../expirar`); `FUND` = recusado por saldo insuficiente; `OTHE` = recusado pelo emissor;
 `ERRO` = provedor indisponível; `ERRO_ESTORNO` = aprovado, mas o estorno posterior falha. Útil para demonstrar cada compensação no vídeo.
 
 ### Entrega e falhas na mensageria do Billing

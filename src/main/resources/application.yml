@@ -3,6 +3,9 @@ spring:
     name: execution-service
 
 execution:
+  cors:
+    # Origens que podem chamar /api/execucoes e /api/estoque pelo navegador (painel /saga-monitor.html do OS Service). Vazio desliga.
+    origens: ${EXECUTION_CORS_ORIGENS:http://localhost:8081}
   aws:
     regiao: ${AWS_REGION:us-east-1}
     # Só em desenvolvimento (LocalStack). Na AWS fica vazio e vale o endpoint oficial.

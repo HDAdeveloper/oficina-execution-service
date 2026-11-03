@@ -52,6 +52,34 @@ class ControllersTest {
 
     // ------------------------------------------------------------ segurança
 
+    private void preflightLiberado(String caminho) throws Exception {
+        mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options(caminho)
+                        .header("Origin", "http://localhost:8081")
+                        .header("Access-Control-Request-Method", "POST")
+                        .header("Access-Control-Request-Headers", "authorization,content-type"))
+                .andExpect(status().isOk())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.header()
+                        .string("Access-Control-Allow-Origin", "http://localhost:8081"));
+    }
+
+    @Test
+    void painelDoOsServicePodeChamarAExecucaoPeloNavegador() throws Exception {
+        preflightLiberado("/api/execucoes/42/falhar");
+    }
+
+    @Test
+    void painelDoOsServicePodeCadastrarEstoquePeloNavegador() throws Exception {
+        preflightLiberado("/api/estoque");
+    }
+
+    @Test
+    void outraOrigemNaoRecebeLiberacao() throws Exception {
+        mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options("/api/estoque")
+                        .header("Origin", "http://site-qualquer.example")
+                        .header("Access-Control-Request-Method", "POST"))
+                .andExpect(status().isForbidden());
+    }
+
     @Test
     void semTokenDa401EmTodasAsRotas() throws Exception {
         mvc.perform(get("/api/estoque")).andExpect(status().isUnauthorized());
