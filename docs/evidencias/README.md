@@ -1,4 +1,7 @@
-# Evidências — Execution Service
+# Evidências
 
-Coloque aqui os arquivos descritos no checklist de [`docs/cobertura.md`](../../cobertura.md).
-Gere o resumo com `bash scripts/cobertura.sh execution-service --salvar` (ou o equivalente `.ps1`).
+Provas exigidas pelo enunciado, organizadas por serviço (`docs/evidencias/<servico>/`).
+O que guardar e como gerar está em [`../cobertura.md`](../cobertura.md).
+
+Convenção de nomes: `cobertura-resumo.txt` (gerado pelo script), `cobertura-<servico>-AAAA-MM-DD.png`
+(print do relatório do JaCoCo) e `verify-<servico>-AAAA-MM-DD.png` (print do build).
