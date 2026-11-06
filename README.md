@@ -66,9 +66,11 @@ Configure no repositorio (Settings -> Secrets and variables -> Actions):
 Agente Java do New Relic embutido na imagem. Fica desligado ate existir o segredo `newrelic` no cluster
 (`NEW_RELIC_LICENSE_KEY`). Health checks em `/actuator/health`, logs com `correlationId`.
 
-## Documentacao
+## API (Swagger / Postman)
 
-Arquitetura, ADRs, contrato de eventos e Saga: pasta `docs/`. Colecao Postman e Swagger: ver abaixo.
+- **Swagger UI** (com o serviço no ar): `/swagger-ui.html`; contrato vivo em `/v3/api-docs`.
+- **Contrato versionado:** [`docs/openapi.json`](docs/openapi.json) (gerado por `scripts/local/exportar-openapi.ps1` no workspace).
+- **Postman:** *Import → File* com o `docs/openapi.json` (cria a coleção com todas as rotas).
 
 ## Documentação
 
