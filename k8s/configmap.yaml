@@ -12,6 +12,8 @@ data:
   DYNAMO_CRIAR_TABELAS: "false"
   DYNAMO_PREFIXO: "execution_"
   # New Relic (a licenca fica no segredo opcional "newrelic", nunca no Git)
+  # Logs em JSON (formato ECS) no cluster; o correlationId/sagaId do MDC saem como campos
+  LOGGING_STRUCTURED_FORMAT_CONSOLE: "ecs"
   NEW_RELIC_APP_NAME: "oficina-execution-service"
   NEW_RELIC_LOG_FILE_NAME: "STDOUT"
   NEW_RELIC_DISTRIBUTED_TRACING_ENABLED: "true"
