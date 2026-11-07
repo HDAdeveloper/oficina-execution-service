@@ -1,0 +1,443 @@
+{
+  "name": "Oficina — Operação, Saga e Observabilidade",
+  "description": "Fase 4: volume de OS, tempo por etapa da Saga, falhas, latência, recursos e logs correlacionados",
+  "permissions": "PUBLIC_READ_WRITE",
+  "pages": [
+    {
+      "name": "Ordens de serviço e Saga",
+      "description": "Negócio",
+      "widgets": [
+        {
+          "title": "Ordens de serviço abertas por dia",
+          "layout": {
+            "column": 1,
+            "row": 1,
+            "width": 4,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.bar"
+          },
+          "rawConfiguration": {
+            "nrqlQueries": [
+              {
+                "accountIds": [
+                  0
+                ],
+                "query": "FROM Transaction SELECT count(*) AS 'OS abertas' WHERE appName = 'oficina-os-service' AND request.method = 'POST' AND request.uri = '/api/ordens-servico' SINCE 7 days ago TIMESERIES 1 day"
+              }
+            ]
+          }
+        },
+        {
+          "title": "Sagas iniciadas por dia (orçamento solicitado)",
+          "layout": {
+            "column": 5,
+            "row": 1,
+            "width": 4,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.bar"
+          },
+          "rawConfiguration": {
+            "nrqlQueries": [
+              {
+                "accountIds": [
+                  0
+                ],
+                "query": "FROM SagaPasso SELECT uniqueCount(sagaId) AS 'Sagas' WHERE tipo = 'SAGA_INICIADA' SINCE 7 days ago TIMESERIES 1 day"
+              }
+            ]
+          }
+        },
+        {
+          "title": "Desfecho das Sagas",
+          "layout": {
+            "column": 9,
+            "row": 1,
+            "width": 4,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.pie"
+          },
+          "rawConfiguration": {
+            "nrqlQueries": [
+              {
+                "accountIds": [
+                  0
+                ],
+                "query": "FROM SagaTransicao SELECT count(*) WHERE terminal = true FACET para SINCE 7 days ago"
+              }
+            ]
+          }
+        },
+        {
+          "title": "Tempo médio por etapa da Saga (segundos)",
+          "layout": {
+            "column": 1,
+            "row": 4,
+            "width": 6,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.bar"
+          },
+          "rawConfiguration": {
+            "nrqlQueries": [
+              {
+                "accountIds": [
+                  0
+                ],
+                "query": "FROM SagaTransicao SELECT average(msNaEtapaAnterior)/1000 AS 'segundos' FACET de SINCE 1 day ago"
+              }
+            ]
+          }
+        },
+        {
+          "title": "Tempo total da Saga até o desfecho (média e p95, s)",
+          "layout": {
+            "column": 7,
+            "row": 4,
+            "width": 6,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.table"
+          },
+          "rawConfiguration": {
+            "nrqlQueries": [
+              {
+                "accountIds": [
+                  0
+                ],
+                "query": "FROM SagaTransicao SELECT average(msTotal)/1000 AS 'média (s)', percentile(msTotal, 95)/1000 AS 'p95 (s)', count(*) AS 'Sagas' WHERE terminal = true FACET para SINCE 7 days ago"
+              }
+            ]
+          }
+        },
+        {
+          "title": "Execução: tempo médio da etapa EM_EXECUCAO (s)",
+          "layout": {
+            "column": 1,
+            "row": 7,
+            "width": 4,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.billboard"
+          },
+          "rawConfiguration": {
+            "nrqlQueries": [
+              {
+                "accountIds": [
+                  0
+                ],
+                "query": "FROM SagaTransicao SELECT average(msNaEtapaAnterior)/1000 AS 'segundos' WHERE de = 'EM_EXECUCAO' SINCE 7 days ago"
+              }
+            ]
+          }
+        },
+        {
+          "title": "Pagamento: tempo médio até confirmar (s)",
+          "layout": {
+            "column": 5,
+            "row": 7,
+            "width": 4,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.billboard"
+          },
+          "rawConfiguration": {
+            "nrqlQueries": [
+              {
+                "accountIds": [
+                  0
+                ],
+                "query": "FROM SagaTransicao SELECT average(msNaEtapaAnterior)/1000 AS 'segundos' WHERE de IN ('COBRANDO', 'AGUARDANDO_PAGAMENTO') SINCE 7 days ago"
+              }
+            ]
+          }
+        },
+        {
+          "title": "Falhas e compensações da Saga",
+          "layout": {
+            "column": 9,
+            "row": 7,
+            "width": 4,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.line"
+          },
+          "rawConfiguration": {
+            "nrqlQueries": [
+              {
+                "accountIds": [
+                  0
+                ],
+                "query": "FROM SagaTransicao SELECT count(*) WHERE para IN ('ORCAMENTO_FALHOU', 'CANCELANDO_ORCAMENTO', 'LIBERANDO_ESTOQUE', 'ESTORNANDO', 'ESTORNO_PENDENTE', 'LIBERACAO_PENDENTE') FACET para TIMESERIES SINCE 1 day ago"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Serviços e recursos",
+      "description": "Técnico",
+      "widgets": [
+        {
+          "title": "Latência das APIs (média e p95, ms)",
+          "layout": {
+            "column": 1,
+            "row": 1,
+            "width": 6,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.line"
+          },
+          "rawConfiguration": {
+            "nrqlQueries": [
+              {
+                "accountIds": [
+                  0
+                ],
+                "query": "FROM Transaction SELECT average(duration)*1000 AS 'média (ms)', percentile(duration, 95)*1000 AS 'p95 (ms)' WHERE appName LIKE 'oficina-%' FACET appName TIMESERIES SINCE 1 hour ago"
+              }
+            ]
+          }
+        },
+        {
+          "title": "Requisições por minuto por serviço",
+          "layout": {
+            "column": 7,
+            "row": 1,
+            "width": 6,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.line"
+          },
+          "rawConfiguration": {
+            "nrqlQueries": [
+              {
+                "accountIds": [
+                  0
+                ],
+                "query": "FROM Transaction SELECT rate(count(*), 1 minute) WHERE appName LIKE 'oficina-%' FACET appName TIMESERIES SINCE 1 hour ago"
+              }
+            ]
+          }
+        },
+        {
+          "title": "Taxa de erro HTTP por serviço (%)",
+          "layout": {
+            "column": 1,
+            "row": 4,
+            "width": 6,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.line"
+          },
+          "rawConfiguration": {
+            "nrqlQueries": [
+              {
+                "accountIds": [
+                  0
+                ],
+                "query": "FROM Transaction SELECT percentage(count(*), WHERE error IS true) AS 'erro %' WHERE appName LIKE 'oficina-%' FACET appName TIMESERIES SINCE 1 hour ago"
+              }
+            ]
+          }
+        },
+        {
+          "title": "Erros e falhas nas integrações",
+          "layout": {
+            "column": 7,
+            "row": 4,
+            "width": 6,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.table"
+          },
+          "rawConfiguration": {
+            "nrqlQueries": [
+              {
+                "accountIds": [
+                  0
+                ],
+                "query": "FROM TransactionError SELECT count(*) AS 'erros' WHERE appName LIKE 'oficina-%' FACET appName, error.class, transactionName SINCE 1 day ago LIMIT 20"
+              }
+            ]
+          }
+        },
+        {
+          "title": "Memória física por serviço (MB)",
+          "layout": {
+            "column": 1,
+            "row": 7,
+            "width": 6,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.line"
+          },
+          "rawConfiguration": {
+            "nrqlQueries": [
+              {
+                "accountIds": [
+                  0
+                ],
+                "query": "FROM Metric SELECT average(apm.service.memory.physical) AS 'MB' WHERE appName LIKE 'oficina-%' FACET appName TIMESERIES SINCE 1 hour ago"
+              }
+            ]
+          }
+        },
+        {
+          "title": "CPU por serviço (%)",
+          "layout": {
+            "column": 7,
+            "row": 7,
+            "width": 6,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.line"
+          },
+          "rawConfiguration": {
+            "nrqlQueries": [
+              {
+                "accountIds": [
+                  0
+                ],
+                "query": "FROM Metric SELECT average(apm.service.cpu.usertime.utilization)*100 AS 'CPU %' WHERE appName LIKE 'oficina-%' FACET appName TIMESERIES SINCE 1 hour ago"
+              }
+            ]
+          }
+        },
+        {
+          "title": "Instâncias ativas (uptime)",
+          "layout": {
+            "column": 1,
+            "row": 10,
+            "width": 6,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.table"
+          },
+          "rawConfiguration": {
+            "nrqlQueries": [
+              {
+                "accountIds": [
+                  0
+                ],
+                "query": "FROM Transaction SELECT uniqueCount(host) AS 'pods', latest(timestamp) AS 'último sinal' WHERE appName LIKE 'oficina-%' FACET appName SINCE 10 minutes ago"
+              }
+            ]
+          }
+        },
+        {
+          "title": "Reenvios de comando da Saga (respostas atrasadas)",
+          "layout": {
+            "column": 7,
+            "row": 10,
+            "width": 6,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.line"
+          },
+          "rawConfiguration": {
+            "nrqlQueries": [
+              {
+                "accountIds": [
+                  0
+                ],
+                "query": "FROM SagaPasso SELECT count(*) WHERE tipo = 'REENVIO' TIMESERIES SINCE 1 day ago"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Logs e rastreio",
+      "description": "Correlação",
+      "widgets": [
+        {
+          "title": "Logs por serviço e nível (JSON)",
+          "layout": {
+            "column": 1,
+            "row": 1,
+            "width": 6,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.line"
+          },
+          "rawConfiguration": {
+            "nrqlQueries": [
+              {
+                "accountIds": [
+                  0
+                ],
+                "query": "FROM Log SELECT count(*) WHERE entity.name LIKE 'oficina-%' FACET entity.name, level TIMESERIES SINCE 1 hour ago"
+              }
+            ]
+          }
+        },
+        {
+          "title": "Rastrear uma requisição pelo correlationId (troque o valor)",
+          "layout": {
+            "column": 7,
+            "row": 1,
+            "width": 6,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.table"
+          },
+          "rawConfiguration": {
+            "nrqlQueries": [
+              {
+                "accountIds": [
+                  0
+                ],
+                "query": "FROM Log SELECT timestamp, entity.name, level, message WHERE correlationId = 'COLE-O-CORRELATION-ID' OR `context.correlationId` = 'COLE-O-CORRELATION-ID' SINCE 1 day ago LIMIT 50"
+              }
+            ]
+          }
+        },
+        {
+          "title": "Passos de uma Saga (troque o sagaId)",
+          "layout": {
+            "column": 1,
+            "row": 4,
+            "width": 12,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.table"
+          },
+          "rawConfiguration": {
+            "nrqlQueries": [
+              {
+                "accountIds": [
+                  0
+                ],
+                "query": "FROM SagaPasso SELECT timestamp, tipo, estadoAtual, msDesdePassoAnterior WHERE sagaId = 'COLE-O-SAGA-ID' SINCE 1 day ago LIMIT 100"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
