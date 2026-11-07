@@ -1,0 +1,428 @@
+{
+    "openapi":  "3.0.1",
+    "info":  {
+                 "title":  "Execution Service â Oficina MecÃ¢nica",
+                 "description":  "Estoque de peÃ§as e execuÃ§Ã£o dos serviÃ§os. Os comandos da Saga chegam por mensageria. Use um token emitido pelo OS Service em /api/auth/login (botÃ£o Authorize).",
+                 "version":  "1.0.0"
+             },
+    "servers":  [
+                    {
+                        "url":  "http://localhost:8083",
+                        "description":  "Generated server url"
+                    }
+                ],
+    "security":  [
+                     {
+                         "bearerAuth":  [
+
+                                        ]
+                     }
+                 ],
+    "paths":  {
+                  "/api/execucoes/{osId}/iniciar":  {
+                                                        "post":  {
+                                                                     "tags":  [
+                                                                                  "ExecuÃ§Ã£o dos serviÃ§os"
+                                                                              ],
+                                                                     "summary":  "Inicia o reparo (NA_FILA â EM_REPARO) e publica EXECUCAO_INICIADA",
+                                                                     "operationId":  "iniciar",
+                                                                     "parameters":  [
+                                                                                        {
+                                                                                            "name":  "osId",
+                                                                                            "in":  "path",
+                                                                                            "required":  true,
+                                                                                            "schema":  {
+                                                                                                           "type":  "integer",
+                                                                                                           "format":  "int64"
+                                                                                                       }
+                                                                                        }
+                                                                                    ],
+                                                                     "responses":  {
+                                                                                       "200":  {
+                                                                                                   "description":  "OK",
+                                                                                                   "content":  {
+                                                                                                                   "*/*":  {
+                                                                                                                               "schema":  {
+                                                                                                                                              "$ref":  "#/components/schemas/ExecucaoResponse"
+                                                                                                                                          }
+                                                                                                                           }
+                                                                                                               }
+                                                                                               }
+                                                                                   }
+                                                                 }
+                                                    },
+                  "/api/execucoes/{osId}/finalizar":  {
+                                                          "post":  {
+                                                                       "tags":  [
+                                                                                    "ExecuÃ§Ã£o dos serviÃ§os"
+                                                                                ],
+                                                                       "summary":  "Finaliza o reparo (EM_REPARO â CONCLUIDA) e publica EXECUCAO_FINALIZADA",
+                                                                       "operationId":  "finalizar",
+                                                                       "parameters":  [
+                                                                                          {
+                                                                                              "name":  "osId",
+                                                                                              "in":  "path",
+                                                                                              "required":  true,
+                                                                                              "schema":  {
+                                                                                                             "type":  "integer",
+                                                                                                             "format":  "int64"
+                                                                                                         }
+                                                                                          }
+                                                                                      ],
+                                                                       "responses":  {
+                                                                                         "200":  {
+                                                                                                     "description":  "OK",
+                                                                                                     "content":  {
+                                                                                                                     "*/*":  {
+                                                                                                                                 "schema":  {
+                                                                                                                                                "$ref":  "#/components/schemas/ExecucaoResponse"
+                                                                                                                                            }
+                                                                                                                             }
+                                                                                                                 }
+                                                                                                 }
+                                                                                     }
+                                                                   }
+                                                      },
+                  "/api/execucoes/{osId}/falhar":  {
+                                                       "post":  {
+                                                                    "tags":  [
+                                                                                 "ExecuÃ§Ã£o dos serviÃ§os"
+                                                                             ],
+                                                                    "summary":  "Registra falha na execuÃ§Ã£o e publica EXECUCAO_FALHOU (a Saga compensa)",
+                                                                    "operationId":  "falhar",
+                                                                    "parameters":  [
+                                                                                       {
+                                                                                           "name":  "osId",
+                                                                                           "in":  "path",
+                                                                                           "required":  true,
+                                                                                           "schema":  {
+                                                                                                          "type":  "integer",
+                                                                                                          "format":  "int64"
+                                                                                                      }
+                                                                                       }
+                                                                                   ],
+                                                                    "requestBody":  {
+                                                                                        "content":  {
+                                                                                                        "application/json":  {
+                                                                                                                                 "schema":  {
+                                                                                                                                                "$ref":  "#/components/schemas/FalhaRequest"
+                                                                                                                                            }
+                                                                                                                             }
+                                                                                                    }
+                                                                                    },
+                                                                    "responses":  {
+                                                                                      "200":  {
+                                                                                                  "description":  "OK",
+                                                                                                  "content":  {
+                                                                                                                  "*/*":  {
+                                                                                                                              "schema":  {
+                                                                                                                                             "$ref":  "#/components/schemas/ExecucaoResponse"
+                                                                                                                                         }
+                                                                                                                          }
+                                                                                                              }
+                                                                                              }
+                                                                                  }
+                                                                }
+                                                   },
+                  "/api/estoque":  {
+                                       "get":  {
+                                                   "tags":  [
+                                                                "Estoque de peÃ§as"
+                                                            ],
+                                                   "summary":  "Lista as peÃ§as em estoque (ordem de cÃ³digo)",
+                                                   "operationId":  "listar",
+                                                   "responses":  {
+                                                                     "200":  {
+                                                                                 "description":  "OK",
+                                                                                 "content":  {
+                                                                                                 "*/*":  {
+                                                                                                             "schema":  {
+                                                                                                                            "type":  "array",
+                                                                                                                            "items":  {
+                                                                                                                                          "$ref":  "#/components/schemas/ItemEstoqueResponse"
+                                                                                                                                      }
+                                                                                                                        }
+                                                                                                         }
+                                                                                             }
+                                                                             }
+                                                                 }
+                                               },
+                                       "post":  {
+                                                    "tags":  [
+                                                                 "Estoque de peÃ§as"
+                                                             ],
+                                                    "summary":  "Cadastra uma peÃ§a (409 se o cÃ³digo jÃ¡ existe)",
+                                                    "operationId":  "cadastrar",
+                                                    "requestBody":  {
+                                                                        "content":  {
+                                                                                        "application/json":  {
+                                                                                                                 "schema":  {
+                                                                                                                                "$ref":  "#/components/schemas/NovaPeca"
+                                                                                                                            }
+                                                                                                             }
+                                                                                    },
+                                                                        "required":  true
+                                                                    },
+                                                    "responses":  {
+                                                                      "201":  {
+                                                                                  "description":  "Created",
+                                                                                  "content":  {
+                                                                                                  "*/*":  {
+                                                                                                              "schema":  {
+                                                                                                                             "$ref":  "#/components/schemas/ItemEstoqueResponse"
+                                                                                                                         }
+                                                                                                          }
+                                                                                              }
+                                                                              }
+                                                                  }
+                                                }
+                                   },
+                  "/api/estoque/{codigo}/reposicoes":  {
+                                                           "post":  {
+                                                                        "tags":  [
+                                                                                     "Estoque de peÃ§as"
+                                                                                 ],
+                                                                        "summary":  "Soma unidades ao estoque de uma peÃ§a",
+                                                                        "operationId":  "repor",
+                                                                        "parameters":  [
+                                                                                           {
+                                                                                               "name":  "codigo",
+                                                                                               "in":  "path",
+                                                                                               "required":  true,
+                                                                                               "schema":  {
+                                                                                                              "type":  "string"
+                                                                                                          }
+                                                                                           }
+                                                                                       ],
+                                                                        "requestBody":  {
+                                                                                            "content":  {
+                                                                                                            "application/json":  {
+                                                                                                                                     "schema":  {
+                                                                                                                                                    "$ref":  "#/components/schemas/Reposicao"
+                                                                                                                                                }
+                                                                                                                                 }
+                                                                                                        },
+                                                                                            "required":  true
+                                                                                        },
+                                                                        "responses":  {
+                                                                                          "200":  {
+                                                                                                      "description":  "OK",
+                                                                                                      "content":  {
+                                                                                                                      "*/*":  {
+                                                                                                                                  "schema":  {
+                                                                                                                                                 "$ref":  "#/components/schemas/ItemEstoqueResponse"
+                                                                                                                                             }
+                                                                                                                              }
+                                                                                                                  }
+                                                                                                  }
+                                                                                      }
+                                                                    }
+                                                       },
+                  "/api/execucoes":  {
+                                         "get":  {
+                                                     "tags":  [
+                                                                  "ExecuÃ§Ã£o dos serviÃ§os"
+                                                              ],
+                                                     "summary":  "Fila de trabalho: execuÃ§Ãµes na fila e em reparo, da mais antiga para a mais nova",
+                                                     "operationId":  "fila",
+                                                     "responses":  {
+                                                                       "200":  {
+                                                                                   "description":  "OK",
+                                                                                   "content":  {
+                                                                                                   "*/*":  {
+                                                                                                               "schema":  {
+                                                                                                                              "type":  "array",
+                                                                                                                              "items":  {
+                                                                                                                                            "$ref":  "#/components/schemas/ExecucaoResponse"
+                                                                                                                                        }
+                                                                                                                          }
+                                                                                                           }
+                                                                                               }
+                                                                               }
+                                                                   }
+                                                 }
+                                     },
+                  "/api/execucoes/{osId}":  {
+                                                "get":  {
+                                                            "tags":  [
+                                                                         "ExecuÃ§Ã£o dos serviÃ§os"
+                                                                     ],
+                                                            "summary":  "Busca a execuÃ§Ã£o de uma OS",
+                                                            "operationId":  "buscar",
+                                                            "parameters":  [
+                                                                               {
+                                                                                   "name":  "osId",
+                                                                                   "in":  "path",
+                                                                                   "required":  true,
+                                                                                   "schema":  {
+                                                                                                  "type":  "integer",
+                                                                                                  "format":  "int64"
+                                                                                              }
+                                                                               }
+                                                                           ],
+                                                            "responses":  {
+                                                                              "200":  {
+                                                                                          "description":  "OK",
+                                                                                          "content":  {
+                                                                                                          "*/*":  {
+                                                                                                                      "schema":  {
+                                                                                                                                     "$ref":  "#/components/schemas/ExecucaoResponse"
+                                                                                                                                 }
+                                                                                                                  }
+                                                                                                      }
+                                                                                      }
+                                                                          }
+                                                        }
+                                            },
+                  "/api/estoque/{codigo}":  {
+                                                "get":  {
+                                                            "tags":  [
+                                                                         "Estoque de peÃ§as"
+                                                                     ],
+                                                            "summary":  "Busca uma peÃ§a pelo cÃ³digo",
+                                                            "operationId":  "buscar_1",
+                                                            "parameters":  [
+                                                                               {
+                                                                                   "name":  "codigo",
+                                                                                   "in":  "path",
+                                                                                   "required":  true,
+                                                                                   "schema":  {
+                                                                                                  "type":  "string"
+                                                                                              }
+                                                                               }
+                                                                           ],
+                                                            "responses":  {
+                                                                              "200":  {
+                                                                                          "description":  "OK",
+                                                                                          "content":  {
+                                                                                                          "*/*":  {
+                                                                                                                      "schema":  {
+                                                                                                                                     "$ref":  "#/components/schemas/ItemEstoqueResponse"
+                                                                                                                                 }
+                                                                                                                  }
+                                                                                                      }
+                                                                                      }
+                                                                          }
+                                                        }
+                                            }
+              },
+    "components":  {
+                       "schemas":  {
+                                       "ExecucaoResponse":  {
+                                                                "type":  "object",
+                                                                "properties":  {
+                                                                                   "osId":  {
+                                                                                                "type":  "integer",
+                                                                                                "format":  "int64"
+                                                                                            },
+                                                                                   "sagaId":  {
+                                                                                                  "type":  "string"
+                                                                                              },
+                                                                                   "reservaId":  {
+                                                                                                     "type":  "string"
+                                                                                                 },
+                                                                                   "status":  {
+                                                                                                  "type":  "string"
+                                                                                              },
+                                                                                   "motivoFalha":  {
+                                                                                                       "type":  "string"
+                                                                                                   },
+                                                                                   "pecas":  {
+                                                                                                 "type":  "array",
+                                                                                                 "items":  {
+                                                                                                               "$ref":  "#/components/schemas/Peca"
+                                                                                                           }
+                                                                                             },
+                                                                                   "servicos":  {
+                                                                                                    "type":  "array",
+                                                                                                    "items":  {
+                                                                                                                  "type":  "string"
+                                                                                                              }
+                                                                                                },
+                                                                                   "criadoEm":  {
+                                                                                                    "type":  "string",
+                                                                                                    "format":  "date-time"
+                                                                                                },
+                                                                                   "iniciadaEm":  {
+                                                                                                      "type":  "string",
+                                                                                                      "format":  "date-time"
+                                                                                                  },
+                                                                                   "finalizadaEm":  {
+                                                                                                        "type":  "string",
+                                                                                                        "format":  "date-time"
+                                                                                                    },
+                                                                                   "atualizadoEm":  {
+                                                                                                        "type":  "string",
+                                                                                                        "format":  "date-time"
+                                                                                                    }
+                                                                               }
+                                                            },
+                                       "Peca":  {
+                                                    "type":  "object",
+                                                    "properties":  {
+                                                                       "codigo":  {
+                                                                                      "type":  "string"
+                                                                                  },
+                                                                       "quantidade":  {
+                                                                                          "type":  "integer",
+                                                                                          "format":  "int32"
+                                                                                      }
+                                                                   }
+                                                },
+                                       "FalhaRequest":  {
+                                                            "type":  "object",
+                                                            "properties":  {
+                                                                               "motivo":  {
+                                                                                              "type":  "string"
+                                                                                          }
+                                                                           }
+                                                        },
+                                       "NovaPeca":  {
+                                                        "type":  "object",
+                                                        "properties":  {
+                                                                           "codigo":  {
+                                                                                          "type":  "string"
+                                                                                      },
+                                                                           "nome":  {
+                                                                                        "type":  "string"
+                                                                                    },
+                                                                           "quantidade":  {
+                                                                                              "type":  "integer",
+                                                                                              "format":  "int32"
+                                                                                          }
+                                                                       }
+                                                    },
+                                       "ItemEstoqueResponse":  {
+                                                                   "type":  "object",
+                                                                   "properties":  {
+                                                                                      "codigo":  {
+                                                                                                     "type":  "string"
+                                                                                                 },
+                                                                                      "nome":  {
+                                                                                                   "type":  "string"
+                                                                                               },
+                                                                                      "disponivel":  {
+                                                                                                         "type":  "integer",
+                                                                                                         "format":  "int32"
+                                                                                                     }
+                                                                                  }
+                                                               },
+                                       "Reposicao":  {
+                                                         "type":  "object",
+                                                         "properties":  {
+                                                                            "quantidade":  {
+                                                                                               "type":  "integer",
+                                                                                               "format":  "int32"
+                                                                                           }
+                                                                        }
+                                                     }
+                                   },
+                       "securitySchemes":  {
+                                               "bearerAuth":  {
+                                                                  "type":  "http",
+                                                                  "scheme":  "bearer",
+                                                                  "bearerFormat":  "JWT"
+                                                              }
+                                           }
+                   }
+}

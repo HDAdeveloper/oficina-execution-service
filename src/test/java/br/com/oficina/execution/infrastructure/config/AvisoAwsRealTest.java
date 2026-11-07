@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 class AvisoAwsRealTest {
 
@@ -51,6 +52,6 @@ class AvisoAwsRealTest {
 
     @Test
     void verificarSemParametrosNaoLancaExcecao() {
-        AvisoAwsReal.verificar("http://localhost:4566");
+        assertThatCode(() -> AvisoAwsReal.verificar("http://localhost:4566")).doesNotThrowAnyException();
     }
 }
