@@ -17,7 +17,7 @@ public class OpenApiConfig {
     public OpenAPI openAPI() {
         return new OpenAPI()
                 .info(new Info()
-                        .title("Execution Service — Oficina Mecânica")
+                        .title("Execution Service — Oficina Tech Service")
                         .version("1.0.0")
                         .description("Estoque de peças e execução dos serviços. Os comandos da Saga chegam por "
                                 + "mensageria. Use um token emitido pelo OS Service em /api/auth/login "

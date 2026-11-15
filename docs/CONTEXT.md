@@ -1,4 +1,4 @@
-# CONTEXT — Tech Challenge Fase 4 (Oficina Mecânica)
+# CONTEXT — Tech Challenge Fase 4 (Oficina Tech Service)
 
 > Este arquivo é a memória do projeto. Quem retomar o trabalho (pessoa ou Claude, em qualquer
 > sessão) deve ler este arquivo e o `PROGRESS.md` antes de qualquer coisa.

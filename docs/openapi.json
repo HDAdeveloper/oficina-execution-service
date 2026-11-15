@@ -1,8 +1,8 @@
 {
     "openapi":  "3.0.1",
     "info":  {
-                 "title":  "Execution Service â Oficina MecÃ¢nica",
-                 "description":  "Estoque de peÃ§as e execuÃ§Ã£o dos serviÃ§os. Os comandos da Saga chegam por mensageria. Use um token emitido pelo OS Service em /api/auth/login (botÃ£o Authorize).",
+                 "title":  "Execution Service — Oficina Tech Service",
+                 "description":  "Estoque de peças e execução dos serviços. Os comandos da Saga chegam por mensageria. Use um token emitido pelo OS Service em /api/auth/login (botão Authorize).",
                  "version":  "1.0.0"
              },
     "servers":  [
@@ -22,9 +22,9 @@
                   "/api/execucoes/{osId}/iniciar":  {
                                                         "post":  {
                                                                      "tags":  [
-                                                                                  "ExecuÃ§Ã£o dos serviÃ§os"
+                                                                                  "Execução dos serviços"
                                                                               ],
-                                                                     "summary":  "Inicia o reparo (NA_FILA â EM_REPARO) e publica EXECUCAO_INICIADA",
+                                                                     "summary":  "Inicia o reparo (NA_FILA → EM_REPARO) e publica EXECUCAO_INICIADA",
                                                                      "operationId":  "iniciar",
                                                                      "parameters":  [
                                                                                         {
@@ -54,9 +54,9 @@
                   "/api/execucoes/{osId}/finalizar":  {
                                                           "post":  {
                                                                        "tags":  [
-                                                                                    "ExecuÃ§Ã£o dos serviÃ§os"
+                                                                                    "Execução dos serviços"
                                                                                 ],
-                                                                       "summary":  "Finaliza o reparo (EM_REPARO â CONCLUIDA) e publica EXECUCAO_FINALIZADA",
+                                                                       "summary":  "Finaliza o reparo (EM_REPARO → CONCLUIDA) e publica EXECUCAO_FINALIZADA",
                                                                        "operationId":  "finalizar",
                                                                        "parameters":  [
                                                                                           {
@@ -86,9 +86,9 @@
                   "/api/execucoes/{osId}/falhar":  {
                                                        "post":  {
                                                                     "tags":  [
-                                                                                 "ExecuÃ§Ã£o dos serviÃ§os"
+                                                                                 "Execução dos serviços"
                                                                              ],
-                                                                    "summary":  "Registra falha na execuÃ§Ã£o e publica EXECUCAO_FALHOU (a Saga compensa)",
+                                                                    "summary":  "Registra falha na execução e publica EXECUCAO_FALHOU (a Saga compensa)",
                                                                     "operationId":  "falhar",
                                                                     "parameters":  [
                                                                                        {
@@ -127,9 +127,9 @@
                   "/api/estoque":  {
                                        "get":  {
                                                    "tags":  [
-                                                                "Estoque de peÃ§as"
+                                                                "Estoque de peças"
                                                             ],
-                                                   "summary":  "Lista as peÃ§as em estoque (ordem de cÃ³digo)",
+                                                   "summary":  "Lista as peças em estoque (ordem de código)",
                                                    "operationId":  "listar",
                                                    "responses":  {
                                                                      "200":  {
@@ -149,9 +149,9 @@
                                                },
                                        "post":  {
                                                     "tags":  [
-                                                                 "Estoque de peÃ§as"
+                                                                 "Estoque de peças"
                                                              ],
-                                                    "summary":  "Cadastra uma peÃ§a (409 se o cÃ³digo jÃ¡ existe)",
+                                                    "summary":  "Cadastra uma peça (409 se o código já existe)",
                                                     "operationId":  "cadastrar",
                                                     "requestBody":  {
                                                                         "content":  {
@@ -180,9 +180,9 @@
                   "/api/estoque/{codigo}/reposicoes":  {
                                                            "post":  {
                                                                         "tags":  [
-                                                                                     "Estoque de peÃ§as"
+                                                                                     "Estoque de peças"
                                                                                  ],
-                                                                        "summary":  "Soma unidades ao estoque de uma peÃ§a",
+                                                                        "summary":  "Soma unidades ao estoque de uma peça",
                                                                         "operationId":  "repor",
                                                                         "parameters":  [
                                                                                            {
@@ -221,9 +221,9 @@
                   "/api/execucoes":  {
                                          "get":  {
                                                      "tags":  [
-                                                                  "ExecuÃ§Ã£o dos serviÃ§os"
+                                                                  "Execução dos serviços"
                                                               ],
-                                                     "summary":  "Fila de trabalho: execuÃ§Ãµes na fila e em reparo, da mais antiga para a mais nova",
+                                                     "summary":  "Fila de trabalho: execuções na fila e em reparo, da mais antiga para a mais nova",
                                                      "operationId":  "fila",
                                                      "responses":  {
                                                                        "200":  {
@@ -245,9 +245,9 @@
                   "/api/execucoes/{osId}":  {
                                                 "get":  {
                                                             "tags":  [
-                                                                         "ExecuÃ§Ã£o dos serviÃ§os"
+                                                                         "Execução dos serviços"
                                                                      ],
-                                                            "summary":  "Busca a execuÃ§Ã£o de uma OS",
+                                                            "summary":  "Busca a execução de uma OS",
                                                             "operationId":  "buscar",
                                                             "parameters":  [
                                                                                {
@@ -277,9 +277,9 @@
                   "/api/estoque/{codigo}":  {
                                                 "get":  {
                                                             "tags":  [
-                                                                         "Estoque de peÃ§as"
+                                                                         "Estoque de peças"
                                                                      ],
-                                                            "summary":  "Busca uma peÃ§a pelo cÃ³digo",
+                                                            "summary":  "Busca uma peça pelo código",
                                                             "operationId":  "buscar_1",
                                                             "parameters":  [
                                                                                {
