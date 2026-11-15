@@ -34,7 +34,7 @@
 
 > Olá! Eu sou o Henrique Dellagnesi Azevedo, RM 372407, aluno da turma 15 da Pós-Tech SOAT da FIAP.
 >
-> Neste vídeo apresento a Fase 4 do Tech Challenge: a minha oficina mecânica, que nas fases anteriores era uma aplicação só, agora dividida em microsserviços.
+> Neste vídeo apresento a Fase 4 do Tech Challenge: a **Oficina Tech Service**, a minha oficina mecânica, que nas fases anteriores era uma aplicação só, agora dividida em microsserviços.
 >
 > O desafio pede que cada serviço seja independente, com repositório, banco e pipeline próprios, e que eles conversem por mensagens. O ponto mais delicado é a consistência: como garantir que um pagamento, uma reserva de peças e uma execução de serviço acabem num estado coerente, mesmo quando um passo falha? A resposta é o padrão **Saga**.
 >

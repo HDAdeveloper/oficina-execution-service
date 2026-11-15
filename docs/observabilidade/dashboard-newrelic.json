@@ -1,5 +1,5 @@
 {
-  "name": "Oficina — Operação, Saga e Observabilidade",
+  "name": "Oficina Tech Service — Operação, Saga e Observabilidade",
   "description": "Fase 4: volume de OS, tempo por etapa da Saga, falhas, latência, recursos e logs correlacionados",
   "permissions": "PUBLIC_READ_WRITE",
   "pages": [
@@ -8,7 +8,7 @@
       "description": "Negócio",
       "widgets": [
         {
-          "title": "Ordens de serviço abertas por dia",
+          "title": "Ordens de serviço abertas (últimos 7 dias)",
           "layout": {
             "column": 1,
             "row": 1,
@@ -16,7 +16,7 @@
             "height": 3
           },
           "visualization": {
-            "id": "viz.bar"
+            "id": "viz.billboard"
           },
           "rawConfiguration": {
             "nrqlQueries": [
@@ -24,13 +24,13 @@
                 "accountIds": [
                   0
                 ],
-                "query": "FROM Transaction SELECT count(*) AS 'OS abertas' WHERE appName = 'oficina-os-service' AND request.method = 'POST' AND request.uri = '/api/ordens-servico' SINCE 7 days ago TIMESERIES 1 day"
+                "query": "FROM Transaction SELECT count(*) AS 'OS abertas' WHERE appName = 'oficina-os-service' AND request.method = 'POST' AND request.uri = '/api/ordens-servico' SINCE 7 days ago"
               }
             ]
           }
         },
         {
-          "title": "Sagas iniciadas por dia (orçamento solicitado)",
+          "title": "Sagas iniciadas (últimos 7 dias)",
           "layout": {
             "column": 5,
             "row": 1,
@@ -38,7 +38,7 @@
             "height": 3
           },
           "visualization": {
-            "id": "viz.bar"
+            "id": "viz.billboard"
           },
           "rawConfiguration": {
             "nrqlQueries": [
@@ -46,7 +46,7 @@
                 "accountIds": [
                   0
                 ],
-                "query": "FROM SagaPasso SELECT uniqueCount(sagaId) AS 'Sagas' WHERE tipo = 'SAGA_INICIADA' SINCE 7 days ago TIMESERIES 1 day"
+                "query": "FROM SagaTransicao SELECT uniqueCount(sagaId) AS 'Sagas' SINCE 7 days ago"
               }
             ]
           }
@@ -372,10 +372,32 @@
       "description": "Correlação",
       "widgets": [
         {
-          "title": "Logs por serviço e nível (JSON)",
+          "title": "Últimas Sagas (copie o sagaId e o correlationId daqui)",
           "layout": {
             "column": 1,
             "row": 1,
+            "width": 12,
+            "height": 4
+          },
+          "visualization": {
+            "id": "viz.table"
+          },
+          "rawConfiguration": {
+            "nrqlQueries": [
+              {
+                "accountIds": [
+                  0
+                ],
+                "query": "FROM SagaTransicao SELECT max(timestamp) AS 'quando', latest(para) AS 'estado atual', latest(osId) AS 'OS', latest(correlationId) AS 'correlationId', max(msTotal)/1000 AS 'total (s)' FACET sagaId ORDER BY max(timestamp) SINCE 1 day ago LIMIT 20"
+              }
+            ]
+          }
+        },
+        {
+          "title": "Logs por serviço e nível (JSON)",
+          "layout": {
+            "column": 1,
+            "row": 5,
             "width": 6,
             "height": 3
           },
@@ -394,10 +416,10 @@
           }
         },
         {
-          "title": "Rastrear uma requisição pelo correlationId (troque o valor)",
+          "title": "Logs da Saga mais recente, em todos os servicos (rastreio por correlationId)",
           "layout": {
             "column": 7,
-            "row": 1,
+            "row": 5,
             "width": 6,
             "height": 3
           },
@@ -410,16 +432,16 @@
                 "accountIds": [
                   0
                 ],
-                "query": "FROM Log SELECT timestamp, entity.name, level, message WHERE correlationId = 'COLE-O-CORRELATION-ID' OR `context.correlationId` = 'COLE-O-CORRELATION-ID' SINCE 1 day ago LIMIT 50"
+                "query": "FROM Log SELECT timestamp, entity.name, level, message WHERE `context.correlationId` IN (FROM SagaTransicao SELECT latest(correlationId) SINCE 1 day ago) SINCE 1 day ago LIMIT 50"
               }
             ]
           }
         },
         {
-          "title": "Passos de uma Saga (troque o sagaId)",
+          "title": "Passos da Saga mais recente",
           "layout": {
             "column": 1,
-            "row": 4,
+            "row": 8,
             "width": 12,
             "height": 3
           },
@@ -432,7 +454,7 @@
                 "accountIds": [
                   0
                 ],
-                "query": "FROM SagaPasso SELECT timestamp, tipo, estadoAtual, msDesdePassoAnterior WHERE sagaId = 'COLE-O-SAGA-ID' SINCE 1 day ago LIMIT 100"
+                "query": "FROM SagaPasso SELECT timestamp, tipo, estadoAtual, msDesdePassoAnterior WHERE sagaId IN (FROM SagaTransicao SELECT latest(sagaId) SINCE 1 day ago) SINCE 1 day ago LIMIT 100"
               }
             ]
           }
