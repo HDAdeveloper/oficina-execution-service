@@ -76,6 +76,6 @@ Refaça a evidência se o código mudar de forma relevante antes da entrega.
 
 | Serviço | `verify` (mín. 80%) | Linhas | Evidência |
 |---|---|---|---|
-| OS Service | ✅ passou em 23/10/2026 (`clean verify`, 204 testes, após a Saga) | **94,9%** das linhas (1425 de 1502); branches 81,9% | `docs/evidencias/os-service/` |
-| Billing Service | ✅ passou em 23/10/2026 (`clean verify`) | **90,5%** das linhas (590 de 652); branches 83,5% | `docs/evidencias/billing-service/` |
-| Execution Service | ✅ passou em 23/10/2026 (`clean verify`) | **93,1%** das linhas (692 de 743); branches 81,8% | `docs/evidencias/execution-service/` |
+| OS Service | ✅ passou em 16/11/2026 (`clean verify`, 249 testes) | **95,2%** das linhas (1547 de 1625); branches 83,4% | `docs/evidencias/os-service/` |
+| Billing Service | ✅ passou em 16/11/2026 (`clean verify`, 167 testes) | **92,0%** das linhas (981 de 1066); branches 81,2% | `docs/evidencias/billing-service/` |
+| Execution Service | ✅ passou em 15/11/2026 (`clean verify`, 114 testes) | **93,5%** das linhas (733 de 784); branches 82,5% | `docs/evidencias/execution-service/` |

@@ -101,6 +101,7 @@ matriz "falha por etapa" estão em [`eventos.md`](eventos.md); a justificativa d
 Pontos principais:
 - Um `sagaId` por OS e um `correlationId` que atravessa REST, mensagens e logs.
 - Novo status `CANCELADA` para OS compensada.
+- **Pagamento por link:** o Billing gera o link, a Saga entra em `AGUARDANDO_PAGAMENTO` (com prazo igual à validade do link) e o cliente recebe o link **por e-mail** (SES; no local, o SES do LocalStack). Pago, a Saga segue para o estoque; vencido, é a compensação A. Decisões: [ADR-009](adr/009-pagamento-por-link-checkout-pro.md) e [ADR-010](adr/010-link-de-pagamento-por-email-ses.md).
 - Mensagem inválida nunca é confirmada: após 3 tentativas vai para a **DLQ** (`*-dlq`), onde a operação a analisa.
 
 ## 5. Mensageria
@@ -124,15 +125,15 @@ SNS + SQS ([ADR-003](adr/003-mensageria-sns-sqs.md)):
 
 ## 8. Implantação e CI/CD
 
-Ensaio completo do Terraform e do deploy feito em 25–26/10; o deploy final acontece perto da gravação do vídeo (a infraestrutura custa por hora e é destruída logo depois).
+Passo a passo com os comandos, nos dois ambientes: [`como-subir-o-ambiente.md`](como-subir-o-ambiente.md). A infraestrutura da AWS custa por hora e é destruída depois da demonstração.
 
-- **Local:** `docker-compose` (2 Postgres + LocalStack com SNS, SQS e DynamoDB) — [ADR-005](adr/005-ambiente-local-localstack.md).
+- **Local:** `docker-compose` (2 Postgres + LocalStack com SNS, SQS, SES e DynamoDB) — [ADR-005](adr/005-ambiente-local-localstack.md).
 - **AWS:** Terraform → EKS, API Gateway, Lambda, SNS/SQS, RDS PostgreSQL ×2, DynamoDB. Cada serviço tem `Dockerfile` e manifestos `k8s/`.
 - **Pipeline por serviço (GitHub Actions):** build → testes + cobertura (JaCoCo, mínimo 80%) → SonarQube Cloud → imagem → deploy no EKS. `main` protegida, merge só por PR.
 
 ## 9. Qualidade
 
-- Cobertura mínima de 80% por serviço, **imposta no build** (JaCoCo): OS Service 94,9%, Billing 90,5% e Execution 93,1% de linhas (evidências em [`cobertura.md`](cobertura.md)).
+- Cobertura mínima de 80% por serviço, **imposta no build** (JaCoCo): OS Service 95,2%, Billing 92,0% e Execution 93,5% de linhas (evidências em [`cobertura.md`](cobertura.md)).
 - Testes de integração com **Testcontainers** (Postgres e LocalStack reais), sem mocks de banco.
 - Scripts ponta a ponta contra o LocalStack: `scripts/local/billing-e2e.sh`, `execution-e2e.sh`.
 - BDD (Cucumber) do fluxo completo da Saga, com compensação, no OS Service: `src/test/resources/features/saga_ordem_servico.feature`.
