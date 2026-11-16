@@ -338,6 +338,8 @@ Os estados `*_PENDENTE` indicam que a compensação não terminou sozinha e **ex
 
 O Billing usa o **Checkout Pro** do Mercado Pago (ADR-009). Cada cobrança cria uma preferência e devolve um link; o cliente paga na página do Mercado Pago. Dados de cartão nunca passam pelos nossos serviços.
 
+O link chega ao cliente **por e-mail**: assim que gera a cobrança, o Billing envia ao e-mail do cliente (o mesmo do cadastro) uma mensagem com o valor, o link e a validade, pela porta `NotificadorCliente` (adaptador SES; no ambiente local, o SES do LocalStack). O envio é de melhor esforço: se falhar, a Saga segue e o link continua na resposta da API e no Monitor. Na demonstração na AWS o provedor de e-mail ficou desligado (só log), porque o SES real exige remetente e destinatário verificados.
+
 ```mermaid
 sequenceDiagram
     autonumber
@@ -403,8 +405,8 @@ A regra de **mínimo de 80% das linhas por serviço** está no `pom.xml` (JaCoCo
 | Serviço | Linhas | Branches | Testes | Data da medição |
 |---|---|---|---|---|
 | OS Service | 95,2% | 83,3% | 248 | 15/11/2026 |
-| Billing Service | 91,7% | 81,5% | **[ATUALIZAR]** | 15/11/2026 |
-| Execution Service | 93,5% | 82,5% | **[ATUALIZAR]** | 15/11/2026 |
+| Billing Service | 91,7% | 81,5% | 160 | 15/11/2026 |
+| Execution Service | 93,5% | 82,5% | 114 | 15/11/2026 |
 
 Evidências em `docs/evidencias/<serviço>/` e como artefato `evidencias-testes-cobertura` de cada execução do pipeline.
 

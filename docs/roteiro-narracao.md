@@ -1,4 +1,6 @@
-# Roteiro de narração do vídeo (14 min 30 s)
+# Roteiro de narração do vídeo — versão local (14 min 30 s)
+
+> Esta versão supõe tudo rodando **localmente** (Docker + LocalStack). Para gravar com o ambiente na AWS, use [`roteiro-narracao-aws.md`](roteiro-narracao-aws.md).
 
 > Texto para **ler em voz alta**, com marcação de tempo e o que mostrar na tela. O limite do desafio é 15 min; este roteiro fecha em **14:30** para deixar folga.
 > Ritmo usado: cerca de 140 palavras por minuto (são ~1.600 palavras de fala; o resto do tempo é demonstração na tela). Se ler mais devagar, corte as frases marcadas com ✂ (são opcionais).
@@ -214,7 +216,7 @@
 
 > Para fechar: construí três microsserviços independentes, com bancos relacional e NoSQL, comunicação assíncrona, uma Saga orquestrada com compensações justificadas, testes acima do mínimo, BDD e pipeline por serviço.
 >
-> Também tomei decisões conscientes sobre o que **não** fazer agora, e deixei registrado: **pagamento na retirada** do veículo, que mudaria a ordem da Saga; **aviso por e-mail ao cliente**, que seria um consumidor dos eventos que já existem; e **separar o estoque** num serviço próprio, o que faz sentido no futuro, mas custaria um quarto serviço e mudaria a Saga. As justificativas estão na documentação.
+> Também tomei decisões conscientes sobre o que **não** fazer agora, e deixei registrado: **pagamento na retirada** do veículo, que mudaria a ordem da Saga; **outros avisos por e-mail ao cliente** (o link de pagamento já vai por e-mail, pelo SES), que seriam consumidores dos eventos que já existem; e **separar o estoque** num serviço próprio, o que faz sentido no futuro, mas custaria um quarto serviço e mudaria a Saga. As justificativas estão na documentação.
 >
 > Todos os repositórios, a documentação de arquitetura, os diagramas de DDD e de Event Storming, as coleções do Postman e a evidência de cobertura estão nos links do documento de entrega. Obrigado pela atenção!
 

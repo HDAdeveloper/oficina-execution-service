@@ -723,3 +723,10 @@ Compensação C com o Mercado Pago de teste: pagamento aprovado, execução falh
 
 ### Link vencido validado com o Mercado Pago (03/11)
 Com `PAGAMENTO_VALIDADE_LINK_MINUTOS=2`: link gerado 20:21:38, o Billing publicou `PagamentoRecusado` às 20:23:38 (vencimento), a Saga cancelou o orçamento e terminou `ENCERRADA` às 20:23:39. Toda a integração real (link, webhook, estorno, vencimento) está validada em teste.
+
+
+## 16/11/2026 — e-mail com o link de pagamento (SES)
+- O cliente precisa receber o link para pagar, então o Billing passou a enviar o link por e-mail quando gera a cobrança por link. Porta `NotificadorCliente`, adaptador `NotificadorSes` (SES; mesmo código no LocalStack e na AWS) e `NotificadorLog` (padrão quando desligado). Falha no envio não derruba a Saga (melhor esforço; o link segue na API e no Monitor).
+- Ligação: `billing.email.provedor=ses` (`EMAIL_PROVEDOR`), remetente `EMAIL_REMETENTE` (padrão `oficina@oficina.local`). O LocalStack ganhou o serviço `ses` e o remetente é verificado no init; `scripts/local/ver-emails.ps1` mostra os e-mails enviados.
+- Na AWS real o SES exige remetente e destinatário verificados (sandbox) e a permissão `ses:SendEmail` no papel do Billing; **não está no Terraform** (ambiente destruído). A demonstração gravada na AWS usou o log, não o e-mail.
+- Outros avisos (orçamento pronto, finalizada, cancelada) seguem como evolução futura.
