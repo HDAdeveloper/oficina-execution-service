@@ -403,8 +403,8 @@ A regra de **mínimo de 80% das linhas por serviço** está no `pom.xml` (JaCoCo
 | Serviço | Linhas | Branches | Testes | Data da medição |
 |---|---|---|---|---|
 | OS Service | 95,2% | 83,3% | 248 | 15/11/2026 |
-| Billing Service | 91,7% | 81,5% | **[ATUALIZAR]** | 15/11/2026 |
-| Execution Service | 93,5% | 82,5% | **[ATUALIZAR]** | 15/11/2026 |
+| Billing Service | 91,7% | 81,5% | 160 | 15/11/2026 |
+| Execution Service | 93,5% | 82,5% | 114 | 15/11/2026 |
 
 Evidências em `docs/evidencias/<serviço>/` e como artefato `evidencias-testes-cobertura` de cada execução do pipeline.
 
