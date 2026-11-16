@@ -40,15 +40,15 @@ Agora, a demonstração ponta a ponta, rodando na AWS. [Passe para os clipes do 
 
 ## Slide 10 · Testes e cobertura
 
-O desafio exige pelo menos oitenta por cento de cobertura por serviço, e coloquei essa regra no próprio build: abaixo disso o verify falha, local e no pipeline. OS Service 95,2%, Billing 91,7% e Execution 93,5%. Os testes são unitários, de casos de uso e de integração, com PostgreSQL e DynamoDB em contêineres. A qualidade é analisada no SonarQube Cloud, e o BDD, com Cucumber em português, descreve a Saga inteira, com as três compensações e um cenário de mensagem repetida.
+O desafio exige pelo menos oitenta por cento de cobertura por serviço, e coloquei essa regra no próprio build: abaixo disso o verify falha, local e no pipeline. OS Service 95,2%, Billing 92,0% e Execution 93,5%. Os testes são unitários, de casos de uso e de integração, com PostgreSQL e DynamoDB em contêineres. A qualidade é analisada no SonarQube Cloud, e o BDD, com Cucumber em português, descreve a Saga inteira, com as três compensações e um cenário de mensagem repetida.
 
 ## Slide 11 · JaCoCo, OS Service
 
-Relatório do OS Service: 95,2% das linhas e 83,3% dos branches, com 248 testes.
+Relatório do OS Service: 95,2% das linhas e 83,4% dos branches, com 249 testes.
 
 ## Slide 12 · JaCoCo, Billing
 
-Billing Service: 91,7% das linhas e 81,5% dos branches, com 160 testes.
+Billing Service: 92,0% das linhas e 81,2% dos branches, com 167 testes.
 
 ## Slide 13 · JaCoCo, Execution
 

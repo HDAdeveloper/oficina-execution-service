@@ -67,7 +67,7 @@ Legenda: ✅ pronto · 🟡 parcial / precisa de ação · ⬜ pendente.
 | **Logs estruturados em JSON com correlação** | ✅ | `LOGGING_STRUCTURED_FORMAT_CONSOLE=ecs` nos ConfigMaps (JSON no cluster) + `correlationId`/`sagaId` no MDC · ⬜ conferir uma linha real no deploy |
 | **Dashboards**: volume diário de OS, tempo médio por status, erros de integração | ⬜ | montar no New Relic (NRQL) no dia do deploy |
 | Diagrama de componentes e de sequência (autenticação + abertura de OS) | 🟡 | componentes e sequência da Saga existem · ⬜ **sequência de autenticação por CPF + abertura de OS** (falta) |
-| RFCs e ADRs | 🟡 | ADRs 001–009 ✅ · ⬜ **RFCs não existem** (nuvem, banco, autenticação): criar `docs/rfc/` |
+| RFCs e ADRs | 🟡 | ADRs 001–010 ✅ · ⬜ **RFCs não existem** (nuvem, banco, autenticação): criar `docs/rfc/` |
 | Diagrama ER e justificativa do banco | 🟡 | ADR 004 · ⬜ **diagrama ER não existe** (só diagramas de classes do DDD): gerar a partir das migrations |
 
 ## Swagger: onde fica e o que entregar

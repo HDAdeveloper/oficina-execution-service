@@ -124,6 +124,7 @@ classDiagram
         String id
         String nome
         String email
+        %% e-mail obrigatório em Cliente.novo e Cliente.atualizar (ADR-010)
     }
     class Documento {
         <<VO>>
@@ -286,7 +287,7 @@ stateDiagram-v2
     AGUARDANDO_APROVACAO --> CANCELANDO_ORCAMENTO : cliente recusa
     COBRANDO --> RESERVANDO_ESTOQUE : PAGAMENTO_APROVADO
     COBRANDO --> CANCELANDO_ORCAMENTO : PAGAMENTO_RECUSADO (compensação A)
-    COBRANDO --> AGUARDANDO_PAGAMENTO : LINK_PAGAMENTO_GERADO
+    COBRANDO --> AGUARDANDO_PAGAMENTO : LINK_PAGAMENTO_GERADO (link enviado por e-mail)
     AGUARDANDO_PAGAMENTO --> RESERVANDO_ESTOQUE : PAGAMENTO_APROVADO
     AGUARDANDO_PAGAMENTO --> CANCELANDO_ORCAMENTO : link vencido (compensação A)
     RESERVANDO_ESTOQUE --> EM_EXECUCAO : ESTOQUE_RESERVADO
@@ -305,6 +306,8 @@ stateDiagram-v2
     ENCERRADA --> [*]
     ORCAMENTO_FALHOU --> [*]
 ```
+
+Em `AGUARDANDO_PAGAMENTO` o cliente já recebeu o **link por e-mail** (ADR-010): o Billing o envia ao criar o link, fora da Saga, e a Saga só espera o pagamento ou o vencimento. Se o e-mail falhar, o link continua na API e no Monitor e a Saga segue igual.
 
 Estados `*_PENDENTE` sinalizam que a compensação não terminou sozinha e **precisa de ação humana** (a mensagem foi para a DLQ).
 

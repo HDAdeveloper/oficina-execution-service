@@ -74,7 +74,7 @@ Para demonstrar a **compensação A** sem esperar 24 h, use `PAGAMENTO_VALIDADE_
 | Criação do link (`/checkout/preferences`) e consulta do pagamento (`/v1/payments/{id}`) | **validados em teste real em 02/11/2026** (conta de teste, cartão de teste, conciliação manual por `/sincronizar`): a Saga foi de `AGUARDANDO_PAGAMENTO` a `EM_EXECUCAO` |
 | Estorno (`/v1/payments/{id}/refunds`) | **validado em 03/11/2026**: compensação C com o provedor real (execução falhou, estoque devolvido, `ESTORNAR` -> `PagamentoEstornado`, OS `CANCELADA`); o painel do Mercado Pago mostra o pagamento de R$ 200,00 como *Reembolsado* |
 | Link vencido (compensação A) com o provedor real | **validado em 03/11/2026** com `PAGAMENTO_VALIDADE_LINK_MINUTOS=2`: o Billing publicou `PagamentoRecusado` no instante em que o link venceu (sem esperar a folga de 60 s da Saga), a Saga foi a `CANCELANDO_ORCAMENTO` e terminou em `ENCERRADA` ("Link de pagamento expirou sem pagamento") |
-| Webhook na AWS | **não incluído**: o Billing não é exposto pelo API Gateway. Na AWS o provedor continua `simulado` (ou: rota pública só para `/webhooks/mercadopago`) |
+| Webhook na AWS | **implementado** (Service `billing-service-publico` + rota `POST /webhooks/mercadopago` no API Gateway); **ainda não validado na AWS com o Mercado Pago real**. Para usar: seção 6. Sem isso o provedor continua `simulado` |
 
 Se algo divergir no primeiro teste real, os logs do Billing dizem qual chamada falhou (nunca registram o token).
 
@@ -99,3 +99,16 @@ Imagens do teste real de 03/11/2026 (estorno e link vencido) em [`evidencias/mer
 
 ![Recusa por fundos insuficientes no painel: o link continua aberto](evidencias/mercado-pago/recusa-fundos-insuficientes-painel-mercado-pago.png)
 
+
+## 6. Webhook na AWS (sem túnel)
+
+> **Decisão da entrega (16/11/2026):** na AWS o provedor permanece `simulado`. Os passos 4 e 5 (provedor real e teste do webhook) ficam como **opcionais**, a fazer só se sobrar tempo; a infraestrutura da rota já está pronta.
+
+1. `scripts\deploy\deploy-aws.ps1` já aplica `billing-service/k8s/service-publico.yaml` e mostra o endereço do balanceador do Billing.
+2. Segunda fase do Terraform, agora com as duas URLs:
+   `terraform -chdir=infra\terraform apply -var os_service_url=http://<lb-os> -var billing_service_url=http://<lb-billing>`
+3. `terraform -chdir=infra\terraform output url_webhook_mercadopago` mostra a URL HTTPS do API Gateway. Cadastre-a no painel do Mercado Pago (Webhooks) e em `MERCADOPAGO_NOTIFICATION_URL`.
+4. Troque no ConfigMap/Secret do Billing: `PAGAMENTO_PROVEDOR=mercadopago`, e `MERCADOPAGO_ACCESS_TOKEN` e `MERCADOPAGO_WEBHOOK_SECRET` no Secret (nunca no Git); reinicie o deployment (`kubectl -n oficina rollout restart deployment/billing-service`).
+5. (Opcional) Teste: pague no link e confira `kubectl -n oficina logs deployment/billing-service` (aviso recebido, assinatura válida, Saga avançou).
+
+Só `POST /webhooks/mercadopago` está no gateway. Outras rotas do Billing não têm rota pública, e o próprio endpoint confere a assinatura `x-signature` e consulta o pagamento no Mercado Pago antes de decidir.

@@ -150,7 +150,7 @@
 
 **Fala:**
 
-> O desafio exige pelo menos **oitenta por cento de cobertura de testes por serviço**. Coloquei essa regra no próprio build: se a cobertura de linhas cair abaixo de oitenta, o `verify` do Maven falha, localmente e no pipeline. Aqui está o relatório do JaCoCo: OS Service 95,2%, Billing 91,7% e Execution 93,5%, medidos em 15 de novembro. Todos acima do mínimo.
+> O desafio exige pelo menos **oitenta por cento de cobertura de testes por serviço**. Coloquei essa regra no próprio build: se a cobertura de linhas cair abaixo de oitenta, o `verify` do Maven falha, localmente e no pipeline. Aqui está o relatório do JaCoCo: OS Service 95,2%, Billing 92,0% e Execution 93,5%, medidos em 16 de novembro. Todos acima do mínimo.
 >
 > Os testes são de vários níveis: unitários no domínio, testes dos casos de uso com repositórios em memória, e testes de integração com **PostgreSQL e DynamoDB (via LocalStack) rodando em contêineres**, incluindo a Saga inteira persistida.
 >

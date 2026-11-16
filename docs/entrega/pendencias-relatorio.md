@@ -11,7 +11,7 @@ Este arquivo **não** vai para o PDF.
 | Link do repositório de documentação, se for público | Decisão: publicar o workspace ou só os 5 repos |
 | Diagrama de sequência: login por CPF e abertura de OS (seção 5.3) | Desenhar |
 | Diagrama ER do OS e do Billing (seção 7.1) | Gerar a partir das migrações Flyway |
-| Cobertura e número de testes dos 3 serviços (seção 10.2) | `scripts\cobertura.ps1` e `mvnw clean verify` |
+| Cobertura e número de testes dos 3 serviços (seção 10.2) | `scripts\cobertura.ps1` e `mvnw clean verify` (**medir de novo**: OS e Billing ganharam testes do e-mail) |
 
 ## O que um avaliador de arquitetura pode cobrar e ainda não está no relatório
 
