@@ -73,7 +73,7 @@ Atributos de mensagem SNS (usados para roteamento, não fazem parte do corpo):
 | `ORCAMENTO_CRIADO` | Billing | `orcamentoId`, `valorTotal` | OS → `AGUARDANDO_APROVACAO` |
 | `ORCAMENTO_FALHOU` | Billing | `motivo` | OS permanece `EM_DIAGNOSTICO`; o erro entra no histórico |
 | `ORCAMENTO_CANCELADO` | Billing | `orcamentoId` | confirma a compensação |
-| `LINK_PAGAMENTO_GERADO` | Billing | `pagamentoId`, `orcamentoId`, `link`, `expiraEm` (ISO-8601) | Saga → `AGUARDANDO_PAGAMENTO` (guarda o link; o prazo passa a ser a validade do link) |
+| `LINK_PAGAMENTO_GERADO` | Billing | `pagamentoId`, `orcamentoId`, `link`, `expiraEm` (ISO-8601) | Saga → `AGUARDANDO_PAGAMENTO` (guarda o link; o prazo passa a ser a validade do link). Ao criar o link, o Billing também **envia o link por e-mail** ao cliente (ADR-010), fora da Saga e sem afetar o fluxo |
 | `PAGAMENTO_APROVADO` | Billing | `pagamentoId`, `orcamentoId` | envia `RESERVAR_ESTOQUE` |
 | `PAGAMENTO_RECUSADO` | Billing | `orcamentoId`, `motivo` (inclui link vencido) | envia `CANCELAR_ORCAMENTO`; OS → `EM_DIAGNOSTICO` |
 | `PAGAMENTO_ESTORNADO` | Billing | `pagamentoId` | OS → `CANCELADA` |
@@ -217,6 +217,7 @@ sequenceDiagram
     B->>MP: cria a preferência de pagamento
     MP-->>B: link (init_point)
     B--)OS: LINK_PAGAMENTO_GERADO (link, expiraEm)
+    B-)Cliente: e-mail com o link (SES, ADR-010)
     Note over OS: Saga = AGUARDANDO_PAGAMENTO<br/>(prazo = validade do link + 60 s)
     Cliente->>MP: abre o link e paga
     MP->>B: webhook (assinado)

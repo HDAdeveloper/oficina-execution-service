@@ -175,6 +175,7 @@ O catálogo de peças (nome e preço) fica no OS Service, que monta o orçamento
 | 007 | Login por CPF na Lambda; JWT com papéis; consulta por REST | A Lambda não lê o banco do OS Service |
 | 008 | Estoque fica no Execution; serviço próprio como evolução | Evita quarto serviço e mudança na Saga |
 | 009 | Pagamento por link (Checkout Pro) e Saga que espera o cliente | O cliente paga fora do sistema; nenhum dado de cartão passa por nós |
+| 010 | Link de pagamento por e-mail (SES) e e-mail obrigatório no cliente | O cliente precisa receber o link; envio de melhor esforço, sem derrubar a Saga |
 
 ## 6.3 Tecnologias
 
@@ -245,6 +246,7 @@ sequenceDiagram
     Cliente->>OS: aprova orçamento (REST)
     OS-)B: COBRAR_ORCAMENTO
     B--)OS: LINK_PAGAMENTO_GERADO
+    B-)Cliente: e-mail com o link (SES)
     Note over OS: Saga = AGUARDANDO_PAGAMENTO
     B--)OS: PAGAMENTO_APROVADO
     OS-)E: RESERVAR_ESTOQUE
@@ -314,7 +316,7 @@ stateDiagram-v2
     ORCAMENTO_SOLICITADO --> ORCAMENTO_FALHOU : falha / timeout
     AGUARDANDO_APROVACAO --> COBRANDO : cliente aprova
     AGUARDANDO_APROVACAO --> CANCELANDO_ORCAMENTO : cliente recusa
-    COBRANDO --> AGUARDANDO_PAGAMENTO : LINK_PAGAMENTO_GERADO
+    COBRANDO --> AGUARDANDO_PAGAMENTO : LINK_PAGAMENTO_GERADO (link enviado por e-mail)
     COBRANDO --> RESERVANDO_ESTOQUE : PAGAMENTO_APROVADO
     COBRANDO --> CANCELANDO_ORCAMENTO : recusado (A)
     AGUARDANDO_PAGAMENTO --> RESERVANDO_ESTOQUE : PAGAMENTO_APROVADO
@@ -331,6 +333,8 @@ stateDiagram-v2
     ESTORNO_PENDENTE --> CANCELADA : ação manual
     LIBERACAO_PENDENTE --> ESTORNANDO : ação manual
 ```
+
+Em `AGUARDANDO_PAGAMENTO` o cliente já recebeu o **link por e-mail** (ADR-010): o Billing o envia ao criar o link, fora da Saga, e a Saga só espera o pagamento ou o vencimento. Se o e-mail falhar, o link continua na API e no Monitor e a Saga segue igual.
 
 Os estados `*_PENDENTE` indicam que a compensação não terminou sozinha e **exige ação humana**: a mensagem foi para a DLQ e há alerta.
 
@@ -352,6 +356,7 @@ sequenceDiagram
     B->>MP: cria a preferência de pagamento
     MP-->>B: link
     B--)OS: LINK_PAGAMENTO_GERADO (link, expiraEm)
+    B-)Cliente: e-mail com o link (SES)
     Note over OS: Saga = AGUARDANDO_PAGAMENTO<br/>prazo = validade do link + 60 s
     Cliente->>MP: abre o link e paga
     MP->>B: webhook assinado
@@ -404,8 +409,8 @@ A regra de **mínimo de 80% das linhas por serviço** está no `pom.xml` (JaCoCo
 
 | Serviço | Linhas | Branches | Testes | Data da medição |
 |---|---|---|---|---|
-| OS Service | 95,2% | 83,3% | 248 | 15/11/2026 |
-| Billing Service | 91,7% | 81,5% | 160 | 15/11/2026 |
+| OS Service | 95,2% | 83,4% | 249 | 16/11/2026 |
+| Billing Service | 92,0% | 81,2% | 167 | 16/11/2026 |
 | Execution Service | 93,5% | 82,5% | 114 | 15/11/2026 |
 
 Evidências em `docs/evidencias/<serviço>/` e como artefato `evidencias-testes-cobertura` de cada execução do pipeline.
@@ -491,10 +496,12 @@ O `correlationId` nasce no cabeçalho `X-Correlation-Id` da requisição, atrave
 | Segredo JWT compartilhado | Simplicidade para o prazo | Rotação manual |
 | Filas standard (não FIFO) | Vazão e custo | Ordem não garantida entre sagas |
 | Pagamento por link | Sem dado de cartão e sem frontend | O webhook precisa de URL pública |
+| Link por e-mail (melhor esforço) | O cliente recebe o link sem intervenção; falha não derruba a Saga | Entrega do e-mail não é garantida; na AWS o SES exige verificação |
 
 ## 14.2 Limitações conhecidas (declaradas de forma honesta)
 
-- O webhook do Mercado Pago exige **URL pública HTTPS**. Localmente funciona com túnel; na AWS o Billing não é exposto e a rota pública só do webhook não foi incluída (ADR-009).
+- O webhook do Mercado Pago exige **URL pública HTTPS**. Localmente funciona com túnel; na AWS a única rota pública do Billing é `POST /webhooks/mercadopago`, via API Gateway e Service próprio (ADR-009); a validação com o Mercado Pago real foi feita com túnel, e na AWS o provedor segue `simulado` por padrão.
+- O e-mail com o link foi validado no SES do LocalStack; na demonstração na AWS o envio ficou desligado, porque o SES real exige remetente e destinatário verificados.
 - Enquanto o link de pagamento está aberto, o cliente não consegue recusar o orçamento; cancelar o link é evolução futura.
 - Compensações com `*_PENDENTE` dependem de ação humana por desenho.
 
@@ -504,6 +511,7 @@ O `correlationId` nasce no cabeçalho `X-Correlation-Id` da requisição, atrave
 - Extrair o **estoque** para um quarto serviço (ADR-008), sem mudar a Saga.
 - Rota pública para o webhook do Mercado Pago pelo API Gateway.
 - Cancelamento do link de pagamento.
+- Outros avisos ao cliente por e-mail ou SMS (orçamento pronto, finalizada, cancelada), como consumidores dos eventos da Saga; infraestrutura do SES (identidades e permissão) no Terraform.
 - Evoluir de SQS para um barramento com ordenação por chave, se a ordem entre eventos passar a importar.
 
 # 15. Índice de evidências

@@ -26,7 +26,7 @@ Para zerar tudo entre rodadas: `docker compose down -v`, depois subir de novo.
 | Cenário | O que clicar | Estados esperados (final) | Conferir |
 |---|---|---|---|
 | **Caminho feliz** | Criar → Aprovar (APRO) → Iniciar → Finalizar | `AGUARDANDO_APROVACAO` → `COBRANDO` → `RESERVANDO_ESTOQUE` → `EM_EXECUCAO` → `CONCLUIDA` | Estoque da peça baixou (5 → 3) |
-| **Pagamento por link** | Criar → Aprovar (LINK) → **Simular pagamento** → Finalizar | … `AGUARDANDO_PAGAMENTO` (com link e prazo) → `RESERVANDO_ESTOQUE` → `EM_EXECUCAO` → `CONCLUIDA` | Estoque intacto até pagar |
+| **Pagamento por link** | Criar → Aprovar (LINK) → **Simular pagamento** → Finalizar | … `AGUARDANDO_PAGAMENTO` (com link e prazo) → `RESERVANDO_ESTOQUE` → `EM_EXECUCAO` → `CONCLUIDA` | Estoque intacto até pagar; e-mail com o link no SES do LocalStack (`scripts\local\ver-emails.ps1`) |
 | **Link vencido** (variação) | Cenário do link → **Simular link vencido** | `AGUARDANDO_PAGAMENTO` → `CANCELANDO_ORCAMENTO` → `ENCERRADA` | OS volta a Em Diagnóstico |
 | **Compensação A** (FUND) | Criar → Aprovar | `COBRANDO` → `CANCELANDO_ORCAMENTO` → `ENCERRADA` | Pagamento RECUSADO; estoque intacto |
 | **Compensação B** (sem estoque) | Criar → Aprovar | `RESERVANDO_ESTOQUE` → `ESTORNANDO` → `CANCELADA` | Pagamento ESTORNADO; estoque intacto |

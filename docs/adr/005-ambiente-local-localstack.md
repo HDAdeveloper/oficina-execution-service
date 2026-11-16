@@ -3,7 +3,7 @@
 **Status:** Aceito · 22/10/2026
 
 ## Contexto
-Para não gastar crédito da AWS durante o desenvolvimento, SNS, SQS e DynamoDB rodam localmente no
+Para não gastar crédito da AWS durante o desenvolvimento, SNS, SQS, SES (e-mail do link de pagamento, ADR-010) e DynamoDB rodam localmente no
 LocalStack. Desde 23/03/2026 a edição Community foi encerrada: a imagem `latest` exige conta e token
 de autenticação (há plano gratuito para uso não comercial).
 
