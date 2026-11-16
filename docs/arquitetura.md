@@ -125,7 +125,7 @@ SNS + SQS ([ADR-003](adr/003-mensageria-sns-sqs.md)):
 
 ## 8. Implantação e CI/CD
 
-Passo a passo com os comandos, nos dois ambientes: [`como-subir-o-ambiente.md`](como-subir-o-ambiente.md). A infraestrutura da AWS custa por hora e é destruída depois da demonstração.
+Passo a passo com os comandos, nos dois ambientes: [`como-subir-o-ambiente.md`](como-subir-o-ambiente.md). Como o cluster e os manifestos do Kubernetes foram definidos: [`kubernetes.md`](kubernetes.md). A infraestrutura da AWS custa por hora e é destruída depois da demonstração.
 
 - **Local:** `docker-compose` (2 Postgres + LocalStack com SNS, SQS, SES e DynamoDB) — [ADR-005](adr/005-ambiente-local-localstack.md).
 - **AWS:** Terraform → EKS, API Gateway, Lambda, SNS/SQS, RDS PostgreSQL ×2, DynamoDB. Cada serviço tem `Dockerfile` e manifestos `k8s/`.
