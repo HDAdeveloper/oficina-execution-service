@@ -1,0 +1,326 @@
+{
+  "info": {
+    "name": "Execution Service — Oficina Tech Service",
+    "description": "Fila de execução e estoque de peças. Precisa de um token ADMIN (login do OS Service). A execução normal é dirigida pela Saga (mensagens); os endpoints de execução servem para operação manual e demonstração.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrlExecution",
+      "value": "http://localhost:8083"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "osId",
+      "value": ""
+    },
+    {
+      "key": "codigo",
+      "value": ""
+    },
+    {
+      "key": "baseUrlOs",
+      "value": "http://localhost:8081"
+    }
+  ],
+  "item": [
+    {
+      "name": "0. Login (guarda o token ADMIN)",
+      "item": [
+        {
+          "name": "Login do OS Service (admin)",
+          "request": {
+            "method": "POST",
+            "auth": {
+              "type": "noauth"
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrlOs}}/api/auth/login",
+              "host": [
+                "{{baseUrlOs}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuario\": \"admin\",\n  \"senha\": \"admin123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Os três serviços aceitam o mesmo JWT. Local: admin/admin123. Na AWS a senha está no segredo os-service-secrets."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = pm.response.json(); if (j.token) { pm.collectionVariables.set('token', j.token); }"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Execução dos serviços",
+      "item": [
+        {
+          "name": "Inicia o reparo (NA_FILA → EM_REPARO) e publica EXECUCAO_INICIADA",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrlExecution}}/api/execucoes/{{osId}}/iniciar",
+              "host": [
+                "{{baseUrlExecution}}"
+              ],
+              "path": [
+                "api",
+                "execucoes",
+                "{{osId}}",
+                "iniciar"
+              ],
+              "query": []
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Finaliza o reparo (EM_REPARO → CONCLUIDA) e publica EXECUCAO_FINALIZADA",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrlExecution}}/api/execucoes/{{osId}}/finalizar",
+              "host": [
+                "{{baseUrlExecution}}"
+              ],
+              "path": [
+                "api",
+                "execucoes",
+                "{{osId}}",
+                "finalizar"
+              ],
+              "query": []
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Registra falha na execução e publica EXECUCAO_FALHOU (a Saga compensa)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrlExecution}}/api/execucoes/{{osId}}/falhar",
+              "host": [
+                "{{baseUrlExecution}}"
+              ],
+              "path": [
+                "api",
+                "execucoes",
+                "{{osId}}",
+                "falhar"
+              ],
+              "query": []
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"motivo\": \"string\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Fila de trabalho: execuções na fila e em reparo, da mais antiga para a mais nova",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrlExecution}}/api/execucoes",
+              "host": [
+                "{{baseUrlExecution}}"
+              ],
+              "path": [
+                "api",
+                "execucoes"
+              ],
+              "query": []
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Busca a execução de uma OS",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrlExecution}}/api/execucoes/{{osId}}",
+              "host": [
+                "{{baseUrlExecution}}"
+              ],
+              "path": [
+                "api",
+                "execucoes",
+                "{{osId}}"
+              ],
+              "query": []
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "Estoque de peças",
+      "item": [
+        {
+          "name": "Lista as peças em estoque (ordem de código)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrlExecution}}/api/estoque",
+              "host": [
+                "{{baseUrlExecution}}"
+              ],
+              "path": [
+                "api",
+                "estoque"
+              ],
+              "query": []
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Cadastra uma peça (409 se o código já existe)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrlExecution}}/api/estoque",
+              "host": [
+                "{{baseUrlExecution}}"
+              ],
+              "path": [
+                "api",
+                "estoque"
+              ],
+              "query": []
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codigo\": \"string\",\n  \"nome\": \"string\",\n  \"quantidade\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Soma unidades ao estoque de uma peça",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrlExecution}}/api/estoque/{{codigo}}/reposicoes",
+              "host": [
+                "{{baseUrlExecution}}"
+              ],
+              "path": [
+                "api",
+                "estoque",
+                "{{codigo}}",
+                "reposicoes"
+              ],
+              "query": []
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quantidade\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Busca uma peça pelo código",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrlExecution}}/api/estoque/{{codigo}}",
+              "host": [
+                "{{baseUrlExecution}}"
+              ],
+              "path": [
+                "api",
+                "estoque",
+                "{{codigo}}"
+              ],
+              "query": []
+            },
+            "description": ""
+          }
+        }
+      ]
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  }
+}

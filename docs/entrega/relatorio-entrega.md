@@ -14,19 +14,21 @@ date: "Novembro de 2026"
 | Entrega | Tech Challenge Fase 4 |
 | Participante | Henrique Dellagnesi Azevedo · RM 372407 · rickd3ll@gmail.com |
 | Organização no GitHub | `HDAdeveloper` |
-| Usuário avaliador | `soat-architecture`, convidado como colaborador nos 5 repositórios |
+| Visibilidade dos repositórios | Públicos, para acesso direto dos avaliadores |
 
 # 2. Links dos entregáveis
 
 | Entregável | Link |
 |---|---|
-| Vídeo de demonstração (≤ 15 min, não listado) | **[PREENCHER: link do vídeo]** |
-| Repositório do **OS Service** (PostgreSQL, orquestrador da Saga) | https://github.com/HDAdeveloper/oficina-os-service |
-| Repositório do **Billing Service** (PostgreSQL, Mercado Pago) | https://github.com/HDAdeveloper/oficina-billing-service |
-| Repositório do **Execution Service** (DynamoDB) | https://github.com/HDAdeveloper/oficina-execution-service |
-| Repositório da **Lambda de autenticação por CPF** | https://github.com/HDAdeveloper/oficina-auth-lambda |
-| Repositório da **infraestrutura** (Terraform) | https://github.com/HDAdeveloper/oficina-infra |
-| Documentação de arquitetura, ADRs, diagramas (workspace) | **[PREENCHER: link do repositório de documentação, se for público]** |
+| Vídeo de demonstração (≤ 15 min, não listado) | [youtu.be/S43pJ9iFAKM](https://youtu.be/S43pJ9iFAKM) (14:41) |
+| Repositório do **OS Service** (PostgreSQL, orquestrador da Saga) | [github.com/HDAdeveloper/oficina-os-service](https://github.com/HDAdeveloper/oficina-os-service) |
+| Repositório do **Billing Service** (PostgreSQL, Mercado Pago) | [github.com/HDAdeveloper/oficina-billing-service](https://github.com/HDAdeveloper/oficina-billing-service) |
+| Repositório do **Execution Service** (DynamoDB) | [github.com/HDAdeveloper/oficina-execution-service](https://github.com/HDAdeveloper/oficina-execution-service) |
+| Repositório da **Lambda de autenticação por CPF** | [github.com/HDAdeveloper/oficina-auth-lambda](https://github.com/HDAdeveloper/oficina-auth-lambda) |
+| Repositório da **infraestrutura** (Terraform) | [github.com/HDAdeveloper/oficina-infra](https://github.com/HDAdeveloper/oficina-infra) |
+| Repositório da **documentação** (arquitetura, ADRs, DDD, eventos, evidências) | [github.com/HDAdeveloper/oficina-docs](https://github.com/HDAdeveloper/oficina-docs) |
+| **Contratos das APIs** (OpenAPI e coleções Postman de todos os serviços) | [docs/contratos](https://github.com/HDAdeveloper/oficina-docs/blob/main/docs/contratos/README.md) |
+| **Tutorial para subir o ambiente** (LocalStack e AWS, comandos em sequência) | [como-subir-o-ambiente.md](https://github.com/HDAdeveloper/oficina-docs/blob/main/docs/como-subir-o-ambiente.md) |
 
 # 3. Resumo executivo
 
@@ -63,7 +65,7 @@ Pontos que sustentam a solução:
 | `main` protegida, merge por PR | Ruleset `proteger-main` | Seção 11.3 |
 | Dockerfile e manifestos Kubernetes | `Dockerfile` e `k8s/` em cada serviço | Seção 11 |
 | Deploy em Kubernetes | EKS na AWS, provisionado por Terraform | Seção 11.2 |
-| Swagger ou Postman atualizado | `docs/openapi.json` em cada serviço e coleção Postman do OS Service | Seção 13 |
+| Swagger ou Postman atualizado | OpenAPI e coleções Postman de **todos** os serviços em `docs/contratos` (repositório de documentação) | Seção 13 |
 | Monitoramento e observabilidade | New Relic: painel, alertas, logs estruturados, tracing | Seção 12 |
 
 # 5. Arquitetura
@@ -146,7 +148,32 @@ flowchart TB
 - A equipe da oficina usa o login do OS Service, que emite o JWT com papel `ADMIN`. Os papéis são `ADMIN`, `CLIENTE` e `SERVICE`.
 - O token de `CLIENTE` só abre as rotas do próprio cliente (`/api/minhas-ordens`); a área administrativa responde 403.
 
-**[PREENCHER: diagrama de sequência da autenticação por CPF e abertura de OS, ainda a desenhar]**
+```mermaid
+sequenceDiagram
+    autonumber
+    actor C as Cliente
+    actor A as Atendente
+    participant G as API Gateway
+    participant L as Lambda oficina-auth-cpf
+    participant OS as OS Service
+    Note over C,OS: Acesso do cliente por CPF
+    C->>G: POST /auth/cpf (CPF)
+    G->>L: invoca a Lambda
+    L->>L: valida o CPF
+    L->>OS: GET /api/clientes/documento/{cpf} (token SERVICE)
+    OS-->>L: dados do cliente
+    L-->>C: JWT com papel CLIENTE
+    C->>G: GET /api/minhas-ordens (Bearer JWT)
+    G->>OS: encaminha
+    OS-->>C: somente as ordens do próprio cliente
+    Note over A,OS: Abertura da OS pela equipe
+    A->>G: POST /api/auth/login (usuário e senha)
+    G->>OS: encaminha
+    OS-->>A: JWT com papel ADMIN
+    A->>G: POST /api/ordens-servico (Bearer JWT)
+    G->>OS: encaminha
+    OS-->>A: OS criada em RECEBIDA
+```
 
 # 6. Justificativa da divisão e das tecnologias
 
@@ -201,7 +228,96 @@ O catálogo de peças (nome e preço) fica no OS Service, que monta o orçamento
 | Billing Service | PostgreSQL, migrações Flyway V1 a V3 | Orçamento, pagamento, outbox, mensagens processadas |
 | Execution Service | DynamoDB: `estoque` (chave `codigo`), `execucao` (chave `osId`, índice por status e data), mensagens processadas (com TTL) e outbox (índice esparso de pendentes) | Modelado pelos padrões de acesso (ADR-006) |
 
-**[PREENCHER: diagrama ER das migrações do OS e do Billing, ainda a gerar]**
+```mermaid
+erDiagram
+    CLIENTE ||--o{ VEICULO : possui
+    CLIENTE ||--o{ ORDEM_SERVICO : solicita
+    VEICULO ||--o{ ORDEM_SERVICO : atende
+    ORDEM_SERVICO ||--o{ OS_ITEM_SERVICO : contem
+    ORDEM_SERVICO ||--o{ OS_ITEM_PECA : contem
+    ORDEM_SERVICO ||--o{ OS_HISTORICO : registra
+    ORDEM_SERVICO ||--o{ SAGA_INSTANCE : "tem sagas"
+    SAGA_INSTANCE ||--o{ SAGA_PASSO : "diario"
+    CLIENTE {
+        varchar documento PK
+        varchar nome
+        varchar tipo_documento
+        varchar email
+    }
+    VEICULO {
+        bigint id PK
+        varchar placa UK
+        varchar cliente_id FK
+    }
+    ORDEM_SERVICO {
+        bigint id PK
+        varchar numero UK
+        varchar cliente_id FK
+        bigint veiculo_id FK
+        varchar status
+        varchar orcamento_id
+    }
+    SAGA_INSTANCE {
+        varchar id PK
+        bigint os_id FK
+        varchar estado
+        varchar link_pagamento
+    }
+    SAGA_PASSO {
+        varchar saga_id PK
+        int ordem PK
+        varchar tipo
+    }
+    OUTBOX_COMANDO {
+        bigint id PK
+        varchar message_id UK
+        varchar tipo
+        timestamptz publicado_em
+    }
+    MENSAGEM_PROCESSADA {
+        varchar message_id PK
+    }
+```
+
+*OS Service. As tabelas `servico` e `peca` (catálogo) não têm chave estrangeira: os itens da OS guardam uma cópia do nome e do preço.*
+
+```mermaid
+erDiagram
+    ORCAMENTO ||--o{ ORCAMENTO_ITEM : contem
+    ORCAMENTO ||--o{ PAGAMENTO : "cobrado por"
+    ORCAMENTO {
+        varchar id PK
+        bigint os_id
+        varchar cliente_id
+        varchar email_cliente
+        varchar status
+        numeric valor_total
+    }
+    ORCAMENTO_ITEM {
+        varchar orcamento_id PK
+        int ordem PK
+        varchar tipo
+        int quantidade
+    }
+    PAGAMENTO {
+        varchar id PK
+        varchar orcamento_id FK
+        varchar status
+        varchar link_pagamento
+        timestamptz expira_em
+    }
+    OUTBOX_EVENTO {
+        bigint id PK
+        varchar message_id UK
+        varchar tipo
+        timestamptz publicado_em
+    }
+    MENSAGEM_PROCESSADA {
+        varchar message_id PK
+    }
+```
+
+*Billing Service. Só um pagamento aprovado e um aguardando por orçamento (índices únicos parciais).*
 
 ## 7.2 Consistência sem transação distribuída
 
@@ -479,9 +595,19 @@ O `correlationId` nasce no cabeçalho `X-Correlation-Id` da requisição, atrave
 
 # 13. Contrato da API
 
-- Cada serviço publica o Swagger pelo springdoc (`/swagger-ui.html`) e versiona o contrato em `docs/openapi.json`.
-- O OS Service tem também a coleção Postman em `docs/postman/`.
-- A Lambda de autenticação documenta o `POST /auth/cpf` (entrada, saída, erros) no README.
+Todos os contratos estão reunidos no repositório de documentação, em [docs/contratos](https://github.com/HDAdeveloper/oficina-docs/blob/main/docs/contratos/README.md):
+
+| Serviço | OpenAPI | Coleção Postman |
+|---|---|---|
+| OS Service | [os-service.json](https://github.com/HDAdeveloper/oficina-docs/blob/main/docs/contratos/openapi/os-service.json) | [oficina-os-service](https://github.com/HDAdeveloper/oficina-docs/blob/main/docs/contratos/postman/oficina-os-service.postman_collection.json) |
+| Billing Service | [billing-service.json](https://github.com/HDAdeveloper/oficina-docs/blob/main/docs/contratos/openapi/billing-service.json) | [oficina-billing-service](https://github.com/HDAdeveloper/oficina-docs/blob/main/docs/contratos/postman/oficina-billing-service.postman_collection.json) |
+| Execution Service | [execution-service.json](https://github.com/HDAdeveloper/oficina-docs/blob/main/docs/contratos/openapi/execution-service.json) | [oficina-execution-service](https://github.com/HDAdeveloper/oficina-docs/blob/main/docs/contratos/postman/oficina-execution-service.postman_collection.json) |
+| Autenticação por CPF (Lambda) | `POST /auth/cpf` | [oficina-auth-lambda](https://github.com/HDAdeveloper/oficina-docs/blob/main/docs/contratos/postman/oficina-auth-lambda.postman_collection.json) |
+
+- Ambiente do Postman com as URLs locais: [oficina-local.postman_environment.json](https://github.com/HDAdeveloper/oficina-docs/blob/main/docs/contratos/postman/oficina-local.postman_environment.json).
+- Cada serviço também publica o Swagger pelo springdoc (`/swagger-ui.html`) e versiona o contrato em `docs/openapi.json` no próprio repositório.
+- O contrato das **mensagens** (comandos e eventos da Saga) está em [eventos.md](https://github.com/HDAdeveloper/oficina-docs/blob/main/docs/eventos.md).
+- O webhook do Mercado Pago (`POST /webhooks/mercadopago`) é público, fica fora do Swagger de propósito e está na coleção do Billing.
 - O OS Service inclui o **Monitor da Saga** (`/saga-monitor.html`), página de demonstração que mostra a máquina de estados e as mensagens entre os serviços em tempo real.
 
 # 14. Trade-offs, limitações e evolução

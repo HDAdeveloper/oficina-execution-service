@@ -1,0 +1,93 @@
+{
+  "info": {
+    "name": "Autenticação por CPF (Lambda) — Oficina Tech Service",
+    "description": "Na AWS a chamada passa pelo API Gateway (baseUrlAuth = url_da_api do Terraform). Local: a Lambda roda como servidor HTTP na porta 8090 (docs/como-subir-o-ambiente.md, passo A.2.8).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrlAuth",
+      "value": "http://localhost:8090"
+    },
+    {
+      "key": "baseUrlOs",
+      "value": "http://localhost:8081"
+    },
+    {
+      "key": "token",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Login por CPF (devolve o JWT do cliente)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrlAuth}}/auth/cpf",
+          "host": [
+            "{{baseUrlAuth}}"
+          ],
+          "path": [
+            "auth",
+            "cpf"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"cpf\": \"11144477735\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "description": "200 com o token (papel CLIENTE, 1 h); 400 CPF inválido; 401 CPF não cadastrado ou cliente inativo (resposta genérica, sem revelar se o CPF existe); 502 OS Service indisponível."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const j = pm.response.json(); if (j.token) { pm.collectionVariables.set('token', j.token); }"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Minhas ordens (com o token do cliente)",
+      "request": {
+        "method": "GET",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{baseUrlOs}}/api/minhas-ordens",
+          "host": [
+            "{{baseUrlOs}}"
+          ],
+          "path": [
+            "api",
+            "minhas-ordens"
+          ]
+        },
+        "description": "O token de CLIENTE só abre as ordens do próprio CPF; a área administrativa responde 403."
+      }
+    }
+  ]
+}

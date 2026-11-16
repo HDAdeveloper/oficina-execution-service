@@ -104,7 +104,7 @@ Imagens do teste real de 03/11/2026 (estorno e link vencido) em [`evidencias/mer
 
 > **Decisão da entrega (16/11/2026):** na AWS o provedor permanece `simulado`. Os passos 4 e 5 (provedor real e teste do webhook) ficam como **opcionais**, a fazer só se sobrar tempo; a infraestrutura da rota já está pronta.
 
-1. `scripts\deploy\deploy-aws.ps1` já aplica `billing-service/k8s/service-publico.yaml` e mostra o endereço do balanceador do Billing.
+1. Rode `scripts\deploy\deploy-aws.ps1 -ExporWebhook`: ele aplica `billing-service/k8s/service-publico.yaml` e mostra o endereço do balanceador do Billing (sem o `-ExporWebhook` o Billing fica interno).
 2. Segunda fase do Terraform, agora com as duas URLs:
    `terraform -chdir=infra\terraform apply -var os_service_url=http://<lb-os> -var billing_service_url=http://<lb-billing>`
 3. `terraform -chdir=infra\terraform output url_webhook_mercadopago` mostra a URL HTTPS do API Gateway. Cadastre-a no painel do Mercado Pago (Webhooks) e em `MERCADOPAGO_NOTIFICATION_URL`.

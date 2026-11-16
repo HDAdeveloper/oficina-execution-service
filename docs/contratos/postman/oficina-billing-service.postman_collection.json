@@ -1,0 +1,267 @@
+{
+  "info": {
+    "name": "Billing Service — Oficina Tech Service",
+    "description": "Consulta de orçamentos e pagamentos e simulador do pagamento por link. Precisa de um token ADMIN (login do OS Service). O webhook do Mercado Pago é público e não usa token.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrlBilling",
+      "value": "http://localhost:8082"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "id",
+      "value": ""
+    },
+    {
+      "key": "osId",
+      "value": ""
+    },
+    {
+      "key": "baseUrlOs",
+      "value": "http://localhost:8081"
+    }
+  ],
+  "item": [
+    {
+      "name": "0. Login (guarda o token ADMIN)",
+      "item": [
+        {
+          "name": "Login do OS Service (admin)",
+          "request": {
+            "method": "POST",
+            "auth": {
+              "type": "noauth"
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrlOs}}/api/auth/login",
+              "host": [
+                "{{baseUrlOs}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuario\": \"admin\",\n  \"senha\": \"admin123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Os três serviços aceitam o mesmo JWT. Local: admin/admin123. Na AWS a senha está no segredo os-service-secrets."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = pm.response.json(); if (j.token) { pm.collectionVariables.set('token', j.token); }"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Simulador de pagamento por link (só com o provedor simulado)",
+      "item": [
+        {
+          "name": "Simula o link vencendo sem pagamento (a Saga roda a compensação A)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrlBilling}}/api/simulador/pagamentos/{{id}}/expirar",
+              "host": [
+                "{{baseUrlBilling}}"
+              ],
+              "path": [
+                "api",
+                "simulador",
+                "pagamentos",
+                "{{id}}",
+                "expirar"
+              ],
+              "query": []
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Simula o cliente pagando o link (a Saga segue para a reserva de estoque)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrlBilling}}/api/simulador/pagamentos/{{id}}/aprovar",
+              "host": [
+                "{{baseUrlBilling}}"
+              ],
+              "path": [
+                "api",
+                "simulador",
+                "pagamentos",
+                "{{id}}",
+                "aprovar"
+              ],
+              "query": []
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "Orçamentos e pagamentos (consulta)",
+      "item": [
+        {
+          "name": "Lista os orçamentos de uma OS (mais recentes primeiro)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrlBilling}}/api/ordens/{{osId}}/orcamentos",
+              "host": [
+                "{{baseUrlBilling}}"
+              ],
+              "path": [
+                "api",
+                "ordens",
+                "{{osId}}",
+                "orcamentos"
+              ],
+              "query": []
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Busca um orçamento pelo id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrlBilling}}/api/orcamentos/{{id}}",
+              "host": [
+                "{{baseUrlBilling}}"
+              ],
+              "path": [
+                "api",
+                "orcamentos",
+                "{{id}}"
+              ],
+              "query": []
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Lista as tentativas de pagamento de um orçamento (mais recentes primeiro)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrlBilling}}/api/orcamentos/{{id}}/pagamentos",
+              "host": [
+                "{{baseUrlBilling}}"
+              ],
+              "path": [
+                "api",
+                "orcamentos",
+                "{{id}}",
+                "pagamentos"
+              ],
+              "query": []
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "Webhook do Mercado Pago",
+      "item": [
+        {
+          "name": "Aviso do Mercado Pago (rota pública, só com provedor mercadopago; fora do Swagger)",
+          "request": {
+            "method": "POST",
+            "auth": {
+              "type": "noauth"
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-signature",
+                "value": "ts=1700000000,v1=<hmac-sha256>"
+              },
+              {
+                "key": "x-request-id",
+                "value": "<uuid>"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrlBilling}}/webhooks/mercadopago?data.id=123456789&type=payment",
+              "host": [
+                "{{baseUrlBilling}}"
+              ],
+              "path": [
+                "webhooks",
+                "mercadopago"
+              ],
+              "query": [
+                {
+                  "key": "data.id",
+                  "value": "123456789"
+                },
+                {
+                  "key": "type",
+                  "value": "payment"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"payment\",\n  \"data\": {\n    \"id\": \"123456789\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "O aviso só diz que o pagamento mudou; o Billing valida a assinatura x-signature (HMAC-SHA256) e consulta o estado no Mercado Pago. 200 = entendido; 401 = assinatura inválida; 503 = provedor indisponível (o Mercado Pago reenvia)."
+          }
+        }
+      ]
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  }
+}

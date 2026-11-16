@@ -33,7 +33,7 @@ Legenda: ✅ pronto · 🟡 parcial / precisa de ação · ⬜ pendente.
 | Evidências de cobertura no README | 🟡 | `docs/evidencias/<servico>/` existe; ⬜ **linkar a evidência no README** de cada repo com os números novos |
 | Documentação da arquitetura do serviço | ✅ | `docs/servico.md` em cada repo |
 | **Swagger ou Postman atualizado** | 🟡 | ver "Swagger" abaixo: Swagger roda **na aplicação**; falta o **arquivo versionado** (`docs/openapi.json`) |
-| soat-architecture como colaborador (Fase 3 pedia; manter) | ⬜ | convidar nos 5 repos + workspace e **conferir aceite** |
+| Acesso dos avaliadores | ✅ | repositórios públicos (o convite de colaborador, de 05/11, expirou e não é mais necessário) |
 
 ## Vídeo (≤ 15 min, YouTube/Vimeo não listado)
 
@@ -50,7 +50,7 @@ Legenda: ✅ pronto · 🟡 parcial / precisa de ação · ⬜ pendente.
 |---|---|
 | Nome e identificação dos participantes | ⬜ |
 | Links dos repositórios | ⬜ (5: os, billing, execution, auth-lambda, infra) |
-| Link do vídeo | ⬜ |
+| Link do vídeo | ✅ https://youtu.be/S43pJ9iFAKM |
 | Diagrama geral da arquitetura (serviços, bancos, comunicação) | 🟡 `docs/arquitetura.md` (Mermaid) · ⬜ exportar imagem |
 | Estratégia da Saga e justificativa | ✅ `docs/adr/002`, `docs/eventos.md` (⬜ resumir no PDF) |
 | Justificativa da divisão dos microsserviços e tecnologias | ✅ ADR 001, 003, 004 |

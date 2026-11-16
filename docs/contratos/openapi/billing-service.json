@@ -1,0 +1,309 @@
+{
+    "openapi":  "3.0.1",
+    "info":  {
+                 "title":  "Billing Service — Oficina Tech Service",
+                 "description":  "Consulta de orçamentos e pagamentos. Os comandos (criar, cobrar, cancelar, estornar) chegam por mensageria; esta API é somente leitura. Use um token emitido pelo OS Service em /api/auth/login.",
+                 "version":  "1.0.0"
+             },
+    "servers":  [
+                    {
+                        "url":  "http://localhost:8082",
+                        "description":  "Generated server url"
+                    }
+                ],
+    "security":  [
+                     {
+                         "bearerAuth":  [
+
+                                        ]
+                     }
+                 ],
+    "paths":  {
+                  "/api/simulador/pagamentos/{id}/expirar":  {
+                                                                 "post":  {
+                                                                              "tags":  [
+                                                                                           "Simulador de pagamento por link (só com o provedor simulado)"
+                                                                                       ],
+                                                                              "summary":  "Simula o link vencendo sem pagamento (a Saga roda a compensação A)",
+                                                                              "operationId":  "expirar",
+                                                                              "parameters":  [
+                                                                                                 {
+                                                                                                     "name":  "id",
+                                                                                                     "in":  "path",
+                                                                                                     "required":  true,
+                                                                                                     "schema":  {
+                                                                                                                    "type":  "string"
+                                                                                                                }
+                                                                                                 }
+                                                                                             ],
+                                                                              "responses":  {
+                                                                                                "204":  {
+                                                                                                            "description":  "No Content"
+                                                                                                        }
+                                                                                            }
+                                                                          }
+                                                             },
+                  "/api/simulador/pagamentos/{id}/aprovar":  {
+                                                                 "post":  {
+                                                                              "tags":  [
+                                                                                           "Simulador de pagamento por link (só com o provedor simulado)"
+                                                                                       ],
+                                                                              "summary":  "Simula o cliente pagando o link (a Saga segue para a reserva de estoque)",
+                                                                              "operationId":  "aprovar",
+                                                                              "parameters":  [
+                                                                                                 {
+                                                                                                     "name":  "id",
+                                                                                                     "in":  "path",
+                                                                                                     "required":  true,
+                                                                                                     "schema":  {
+                                                                                                                    "type":  "string"
+                                                                                                                }
+                                                                                                 }
+                                                                                             ],
+                                                                              "responses":  {
+                                                                                                "204":  {
+                                                                                                            "description":  "No Content"
+                                                                                                        }
+                                                                                            }
+                                                                          }
+                                                             },
+                  "/api/ordens/{osId}/orcamentos":  {
+                                                        "get":  {
+                                                                    "tags":  [
+                                                                                 "Orçamentos e pagamentos (consulta)"
+                                                                             ],
+                                                                    "summary":  "Lista os orçamentos de uma OS (mais recentes primeiro)",
+                                                                    "operationId":  "porOs",
+                                                                    "parameters":  [
+                                                                                       {
+                                                                                           "name":  "osId",
+                                                                                           "in":  "path",
+                                                                                           "required":  true,
+                                                                                           "schema":  {
+                                                                                                          "type":  "integer",
+                                                                                                          "format":  "int64"
+                                                                                                      }
+                                                                                       }
+                                                                                   ],
+                                                                    "responses":  {
+                                                                                      "200":  {
+                                                                                                  "description":  "OK",
+                                                                                                  "content":  {
+                                                                                                                  "*/*":  {
+                                                                                                                              "schema":  {
+                                                                                                                                             "type":  "array",
+                                                                                                                                             "items":  {
+                                                                                                                                                           "$ref":  "#/components/schemas/OrcamentoResponse"
+                                                                                                                                                       }
+                                                                                                                                         }
+                                                                                                                          }
+                                                                                                              }
+                                                                                              }
+                                                                                  }
+                                                                }
+                                                    },
+                  "/api/orcamentos/{id}":  {
+                                               "get":  {
+                                                           "tags":  [
+                                                                        "Orçamentos e pagamentos (consulta)"
+                                                                    ],
+                                                           "summary":  "Busca um orçamento pelo id",
+                                                           "operationId":  "buscar",
+                                                           "parameters":  [
+                                                                              {
+                                                                                  "name":  "id",
+                                                                                  "in":  "path",
+                                                                                  "required":  true,
+                                                                                  "schema":  {
+                                                                                                 "type":  "string"
+                                                                                             }
+                                                                              }
+                                                                          ],
+                                                           "responses":  {
+                                                                             "200":  {
+                                                                                         "description":  "OK",
+                                                                                         "content":  {
+                                                                                                         "*/*":  {
+                                                                                                                     "schema":  {
+                                                                                                                                    "$ref":  "#/components/schemas/OrcamentoResponse"
+                                                                                                                                }
+                                                                                                                 }
+                                                                                                     }
+                                                                                     }
+                                                                         }
+                                                       }
+                                           },
+                  "/api/orcamentos/{id}/pagamentos":  {
+                                                          "get":  {
+                                                                      "tags":  [
+                                                                                   "Orçamentos e pagamentos (consulta)"
+                                                                               ],
+                                                                      "summary":  "Lista as tentativas de pagamento de um orçamento (mais recentes primeiro)",
+                                                                      "operationId":  "pagamentos",
+                                                                      "parameters":  [
+                                                                                         {
+                                                                                             "name":  "id",
+                                                                                             "in":  "path",
+                                                                                             "required":  true,
+                                                                                             "schema":  {
+                                                                                                            "type":  "string"
+                                                                                                        }
+                                                                                         }
+                                                                                     ],
+                                                                      "responses":  {
+                                                                                        "200":  {
+                                                                                                    "description":  "OK",
+                                                                                                    "content":  {
+                                                                                                                    "*/*":  {
+                                                                                                                                "schema":  {
+                                                                                                                                               "type":  "array",
+                                                                                                                                               "items":  {
+                                                                                                                                                             "$ref":  "#/components/schemas/PagamentoResponse"
+                                                                                                                                                         }
+                                                                                                                                           }
+                                                                                                                            }
+                                                                                                                }
+                                                                                                }
+                                                                                    }
+                                                                  }
+                                                      }
+              },
+    "components":  {
+                       "schemas":  {
+                                       "ItemResponse":  {
+                                                            "type":  "object",
+                                                            "properties":  {
+                                                                               "tipo":  {
+                                                                                            "type":  "string",
+                                                                                            "enum":  [
+                                                                                                         "SERVICO",
+                                                                                                         "PECA"
+                                                                                                     ]
+                                                                                        },
+                                                                               "codigo":  {
+                                                                                              "type":  "string"
+                                                                                          },
+                                                                               "descricao":  {
+                                                                                                 "type":  "string"
+                                                                                             },
+                                                                               "quantidade":  {
+                                                                                                  "type":  "integer",
+                                                                                                  "format":  "int32"
+                                                                                              },
+                                                                               "precoUnitario":  {
+                                                                                                     "type":  "number"
+                                                                                                 },
+                                                                               "subtotal":  {
+                                                                                                "type":  "number"
+                                                                                            }
+                                                                           }
+                                                        },
+                                       "OrcamentoResponse":  {
+                                                                 "type":  "object",
+                                                                 "properties":  {
+                                                                                    "id":  {
+                                                                                               "type":  "string"
+                                                                                           },
+                                                                                    "osId":  {
+                                                                                                 "type":  "integer",
+                                                                                                 "format":  "int64"
+                                                                                             },
+                                                                                    "clienteId":  {
+                                                                                                      "type":  "string"
+                                                                                                  },
+                                                                                    "emailCliente":  {
+                                                                                                         "type":  "string"
+                                                                                                     },
+                                                                                    "status":  {
+                                                                                                   "type":  "string",
+                                                                                                   "enum":  [
+                                                                                                                "PENDENTE",
+                                                                                                                "PAGO",
+                                                                                                                "CANCELADO",
+                                                                                                                "ESTORNADO"
+                                                                                                            ]
+                                                                                               },
+                                                                                    "valorTotal":  {
+                                                                                                       "type":  "number"
+                                                                                                   },
+                                                                                    "motivoCancelamento":  {
+                                                                                                               "type":  "string"
+                                                                                                           },
+                                                                                    "itens":  {
+                                                                                                  "type":  "array",
+                                                                                                  "items":  {
+                                                                                                                "$ref":  "#/components/schemas/ItemResponse"
+                                                                                                            }
+                                                                                              },
+                                                                                    "criadoEm":  {
+                                                                                                     "type":  "string",
+                                                                                                     "format":  "date-time"
+                                                                                                 },
+                                                                                    "atualizadoEm":  {
+                                                                                                         "type":  "string",
+                                                                                                         "format":  "date-time"
+                                                                                                     }
+                                                                                }
+                                                             },
+                                       "PagamentoResponse":  {
+                                                                 "type":  "object",
+                                                                 "properties":  {
+                                                                                    "id":  {
+                                                                                               "type":  "string"
+                                                                                           },
+                                                                                    "orcamentoId":  {
+                                                                                                        "type":  "string"
+                                                                                                    },
+                                                                                    "osId":  {
+                                                                                                 "type":  "integer",
+                                                                                                 "format":  "int64"
+                                                                                             },
+                                                                                    "valor":  {
+                                                                                                  "type":  "number"
+                                                                                              },
+                                                                                    "metodo":  {
+                                                                                                   "type":  "string"
+                                                                                               },
+                                                                                    "status":  {
+                                                                                                   "type":  "string",
+                                                                                                   "enum":  [
+                                                                                                                "AGUARDANDO",
+                                                                                                                "APROVADO",
+                                                                                                                "RECUSADO",
+                                                                                                                "EXPIRADO",
+                                                                                                                "ESTORNADO"
+                                                                                                            ]
+                                                                                               },
+                                                                                    "idExterno":  {
+                                                                                                      "type":  "string"
+                                                                                                  },
+                                                                                    "motivo":  {
+                                                                                                   "type":  "string"
+                                                                                               },
+                                                                                    "linkPagamento":  {
+                                                                                                          "type":  "string"
+                                                                                                      },
+                                                                                    "expiraEm":  {
+                                                                                                     "type":  "string",
+                                                                                                     "format":  "date-time"
+                                                                                                 },
+                                                                                    "criadoEm":  {
+                                                                                                     "type":  "string",
+                                                                                                     "format":  "date-time"
+                                                                                                 },
+                                                                                    "atualizadoEm":  {
+                                                                                                         "type":  "string",
+                                                                                                         "format":  "date-time"
+                                                                                                     }
+                                                                                }
+                                                             }
+                                   },
+                       "securitySchemes":  {
+                                               "bearerAuth":  {
+                                                                  "type":  "http",
+                                                                  "scheme":  "bearer",
+                                                                  "bearerFormat":  "JWT"
+                                                              }
+                                           }
+                   }
+}

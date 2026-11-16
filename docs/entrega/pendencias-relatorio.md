@@ -7,10 +7,7 @@ Este arquivo **não** vai para o PDF.
 
 | Item | Depende de |
 |---|---|
-| Link do vídeo | Gravação e publicação (16/11) |
 | Link do repositório de documentação, se for público | Decisão: publicar o workspace ou só os 5 repos |
-| Diagrama de sequência: login por CPF e abertura de OS (seção 5.3) | Desenhar |
-| Diagrama ER do OS e do Billing (seção 7.1) | Gerar a partir das migrações Flyway |
 | Cobertura e número de testes dos 3 serviços (seção 10.2) | `scripts\cobertura.ps1` e `mvnw clean verify` (**medir de novo**: OS e Billing ganharam testes do e-mail) |
 
 ## O que um avaliador de arquitetura pode cobrar e ainda não está no relatório
@@ -18,7 +15,7 @@ Este arquivo **não** vai para o PDF.
 1. **RFCs** (nuvem, banco, autenticação): a Fase 3 pedia; hoje só há ADRs. Criar `docs/rfc/` e citar na seção 6.
 2. **Rastreamento distribuído** no New Relic: confirmar que aparece no painel; se não, remover a menção ou explicar o limite.
 3. **Prova de deploy**: link de uma execução verde do pipeline e print do `kubectl get pods` (evidência da AWS de 08/11).
-4. **Status checks obrigatórios** na `main` dos 5 repositórios e aceite do convite `soat-architecture`.
+4. **Status checks obrigatórios** na `main` dos 5 repositórios (os repositórios são públicos; o convite `soat-architecture` expirou e foi dispensado).
 5. **Sonar do Execution Service** (projeto ainda não criado).
 6. **Cenário ERRO** (provedor indisponível) validado no monitor.
 7. **Nome novo** (Oficina Tech Service) propagado aos 5 repositórios.

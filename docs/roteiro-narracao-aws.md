@@ -233,6 +233,6 @@ Corte nesta ordem, até caber em 14:30:
 ## Checklist de gravação
 - [ ] Percentuais de cobertura conferidos no relatório de hoje (os de 23/10 eram OS 94,9% e Billing 90,5%, antes das últimas mudanças).
 - [ ] Painel do Sonar sem vulnerabilidades abertas.
-- [ ] Branch `main` protegida e `soat-architecture` convidado nos repositórios (confirme as telas que vai mostrar).
+- [ ] Branch `main` protegida nos repositórios públicos (confirme as telas que vai mostrar).
 - [ ] Bloco 7 gravado no dia do deploy, com `terraform destroy` logo depois.
 - [ ] Duração final do arquivo ≤ 15:00 e link aberto sem login.

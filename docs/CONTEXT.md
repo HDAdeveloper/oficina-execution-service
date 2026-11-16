@@ -56,14 +56,13 @@ Compensações:
 - "Rollback em qualquer etapa": matriz de falhas em `docs/eventos.md`.
 - Execution Service "atualiza status durante diagnóstico e reparos": proposta de subestados pendente (ver PROGRESS).
 - Rastreamento dos fluxos distribuídos faz parte do vídeo: `correlationId` em todas as mensagens e logs, mais tracing no New Relic.
-- Cada repositório final precisa de `main` protegida (PR obrigatório + checagens) e do usuário `soat-architecture` adicionado.
+- Cada repositório final precisa de `main` protegida (PR obrigatório + checagens). Os repositórios são públicos; o convite `soat-architecture` expirou e foi dispensado.
 
 ## Estratégia de repositórios
 - **Agora:** um único repositório de trabalho (`oficina-workspace`), com uma pasta por componente:
   `os-service/`, `billing-service/`, `execution-service/`, `auth-lambda/`, `infra/`, `docs/`.
 - **No fim:** `scripts/split-repos.sh` separa cada pasta em seu próprio repositório (exigência do
   enunciado: um repositório por microsserviço), preservando o histórico.
-- O usuário `soat-architecture` precisa ser adicionado a **todos** os repositórios finais.
 
 ## Restrições e fatos sobre o ambiente de trabalho do Claude
 - A sessão do Claude **não consegue baixar dependências do Maven Central** (bloqueio de rede). Portanto

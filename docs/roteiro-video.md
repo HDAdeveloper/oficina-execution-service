@@ -34,7 +34,7 @@ Mostrar: o serviço responde aos comandos da Saga pela mensageria.
 2. Terminal **comandos** (raiz): `docker compose exec localstack bash -c "cd /scripts && bash billing-e2e.sh"`.
 3. Falar durante a saída: (1) orçamento criado, (2) pagamento recusado e compensação de cancelamento, (3) pagamento aprovado e estorno, (4) pedido inválido vira `ORCAMENTO_FALHOU`.
 4. Abrir `http://localhost:8082/swagger-ui.html` e mostrar os endpoints de consulta (exigem JWT).
-5. Evidência de cobertura: `docs/evidencias/billing-service/` (90,5% de linhas).
+5. Evidência de cobertura: `docs/evidencias/billing-service/` (92,0% de linhas).
 
 ### Execution Service (pronto, ponta a ponta pendente de validação)
 Mostrar: fila de execução, estoque no DynamoDB e a compensação que devolve as peças.
@@ -50,7 +50,7 @@ Mostrar: os três serviços conversando só por mensagens e as compensações.
 2. Terminal **comandos** (raiz): `.\scripts\local\saga-e2e.ps1` (com `Set-ExecutionPolicy -Scope Process Bypass -Force` antes).
 3. Falar durante a saída: (1) caminho feliz: orçamento → aprovação → pagamento → reserva de estoque → execução → CONCLUIDA; (2) compensação A: pagamento recusado (método FUND), o orçamento é cancelado e a OS volta a EM_DIAGNOSTICO; (3) compensação B: estoque insuficiente, o pagamento é estornado e a OS fica CANCELADA; (4) compensação C: a execução falha, o estoque volta, o pagamento é estornado e a OS fica CANCELADA. O script imprime o diário da Saga do último cenário.
 4. Swagger do OS Service: `POST /api/auth/login`, depois `GET /api/ordens-servico/{id}/saga` para mostrar o diário (comandos, eventos, estados).
-5. Evidência de cobertura: `docs/evidencias/os-service/` (94,9% de linhas).
+5. Evidência de cobertura: `docs/evidencias/os-service/` (95,2% de linhas).
 
 ### Monitor da Saga e painel de demonstração (pronto)
 Mostrar: a máquina de estados e as mensagens entre os serviços em tempo real, conduzindo cada cenário com botões. É o que o bloco 4 do [`roteiro-narracao.md`](roteiro-narracao.md) usa; o `saga-e2e.ps1` fica como alternativa de reserva.
@@ -76,4 +76,4 @@ Mostrar: o cliente entra só com o CPF e enxerga apenas as próprias OS.
 ## Checklist final antes de enviar
 - [ ] Vídeo ≤ 15 min, link acessível sem login.
 - [ ] Áudio claro, tela legível, nenhum segredo (tokens, chaves, e-mails pessoais) visível.
-- [ ] Usuário `soat-architecture` adicionado aos repositórios.
+- [x] Repositórios públicos (o convite `soat-architecture` expirou e foi dispensado).
