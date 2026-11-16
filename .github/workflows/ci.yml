@@ -105,7 +105,7 @@ jobs:
       - name: Define o nome da imagem
         id: meta
         if: ${{ github.ref == 'refs/heads/main' && vars.DEPLOY_ENABLED == 'true' }}
-        run: echo "imagem=${{ steps.ecr.outputs.registry }}/execution-service:${{ github.sha }}" >> "$GITHUB_OUTPUT"
+        run: echo "imagem=${{ steps.ecr.outputs.registry }}/oficina/execution-service:${{ github.sha }}" >> "$GITHUB_OUTPUT"
 
       - name: Publica a imagem no ECR
         if: ${{ github.ref == 'refs/heads/main' && vars.DEPLOY_ENABLED == 'true' }}
